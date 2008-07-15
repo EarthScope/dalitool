@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2008.080
+ * modified: 2008.196
  ***************************************************************************/
 
 #include <stdio.h>
@@ -44,12 +44,20 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
   
   if ( verbose >= 1 )
     {
-      printf ("Capabilities: %s\n",
-	      ezxml_attr (xmldoc, "Capabilities"));      
+      printf ("Capabilities: %s\n", ezxml_attr (xmldoc, "Capabilities"));
     }
   
   if ( (status = ezxml_child (xmldoc, "Status")) )
     {
+      if ( verbose >= 1 )
+	{
+	  printf ("Ring size: %s, Packet size: %s, Memory-mapped: %s\n",
+		  ezxml_attr (status, "RingSize"), ezxml_attr (status, "PacketSize"),
+		  ezxml_attr (status, "MemoryMapped"));
+	  printf ("Max packet ID: %s, Max packets: %s\n",
+		  ezxml_attr (status, "MaximumPacketID"), ezxml_attr (status, "MaximumPackets"));
+	}
+      
       printf ("\n  Started: %s, %s connections, %s streams\n",
 	      ezxml_attr (status, "StartTime"), ezxml_attr (status, "TotalConnections"),
 	      ezxml_attr (status, "TotalStreams"));
