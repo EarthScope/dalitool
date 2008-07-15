@@ -1,0 +1,30 @@
+#
+# Nmake file - Windows version
+# Use 'nmake -f Makefile.win'
+#
+# THIS HAS NEVER BEEN TESTED
+# Some modification might be required.
+
+NODEBUG=1
+
+!include <ntwin32.mak>
+
+INCS = /I..\libdali /I..\ezxml /I..\libmseed
+LIBS = ..\libdali\libdali.lib ..\ezxml\ezxml.lib ..\libmseed\libmseed.lib ws2_32.lib
+
+BIN = ..\dalitool.exe
+
+cflags = $(cflags) -DWIN32
+
+all: $(BIN)
+
+$(BIN):	dalixml.obj dalitool.obj
+	link.exe /nologo /out:$(BIN) $(LIBS) archive.obj dsarchive.obj dalixml.obj dalitool.obj
+
+.c.obj:
+   $(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $<
+
+# Clean-up directives
+clean:
+	-del a.out core *.o *.obj *% *~ $(BIN)
+

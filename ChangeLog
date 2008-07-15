@@ -1,0 +1,23 @@
+2008.080:
+	- Update to libdali 0.9.4.
+	- Send INFO CONNECTIONS match expression regardless of case.
+	- More server status for verbose formatted CONNECTIONS output.
+	
+2008.072:
+	- Update to libdali 0.9.2.
+
+2008.070:
+	- Update to libdali 0.9.1.
+        - For INFO CONNECTIONS requests submit a client matching pattern
+	if -m is specified.
+	- Include both total and selected counts of connections and
+	streams in formatted INFO output.
+
+2008.068:
+	- Finish packet handler routine, add data feed latency.
+	- Add repeat INFO request logic.
+	- Complete INFO STREAMS and CONNECTIONS output.
+	- Fixup INFO STATUS output.
+
+2008.066:
+	- Initial version.

@@ -1,0 +1,143 @@
+.TH DALITOOL 1 2008/03/11
+.SH NAME
+dalitool \- DataLink client for data stream inspection and server queries
+
+.SH SYNOPSIS
+.nf
+dalitool [options] [host][:][port] [repeat]
+
+.fi
+.SH DESCRIPTION
+\fBdalitool\fP connects to a \fIDataLink\fR server and either queries
+the server for information or collects selected data streams and prints
+information about the packets received.  All received packets can
+optionally be written to a single file.
+
+Results of server information queries can either be printed as raw XML
+as returned by the server or as formatted output.  If a repeat
+interval is specified with an information query the query will be
+repeated at the given interval in seconds.
+
+.SH OPTIONS
+
+.IP "-V         "
+Report program version and exit.
+
+.IP "-h         "
+Print program usage and exit.
+
+.IP "-v         "
+Be more verbose.  This flag can be used multiple times ("-v -v" or
+"-vv") for more verbosity.
+
+.IP "-p         "
+Print details of received packets.  This flag can be used multiple
+times ("-p -p" or "-pp") for more detail.
+
+.IP "-d         "
+Print the first 6 sample values for each received time-series packet,
+implies at least one -p flag.
+
+.IP "-D         "
+Print all sample values for each received time-series packet, implies
+at least one -p flag.
+
+.IP "-m \fImatch\fR"
+Specify a matching expression to send to the server.  This regular
+expression is used to either limit the stream packets collected or the
+streams or clients reported in information queries.  For packets this
+expression is matched against the stream ID, nominally in the
+form 'NET_STA_LOC_CHAN/TYPE'.  For clients this expression is matched
+against the client address (host:port) string and the client ID, a
+successful match against either means the client will be included in
+the results.  If the expression begins with an '@' character it is
+assumed to be a file containing a list of expressions for matching.
+
+.IP "-r \fIreject\fR"
+Specify a rejecting expression to send to the server.  This regular
+expression is used to limit the stream packets collected and is
+logically opposite of the matching expression.  This expression is
+matched against the stream ID, nominally in the
+form 'NET_STA_LOC_CHAN/TYPE'.  If the expression begins with an '@'
+character it is assumed to be a file containing a list of expressions
+for rejecting.
+
+.IP "-k \fIinterval\fR"
+Specify keepalive packet interval (in seconds) at which keepalive
+packets are sent to the server.  Keepalive packets are only sent if
+nothing is received within the interval.
+
+.IP "-x \fIstatefile\fR"
+During client shutdown the last received packet ID and packet creation
+time will be saved in this file.  If this file exists upon startup the
+information will be used to resume the data collection from the point
+at which it was stopped.  In this way the client can be stopped and
+started without data loss, assuming the data are still available on
+the server.
+
+.IP "-o \fIoutfile\fR"
+If specified, all received packets will be appended to this file.  The
+file is created if it does not exist.  A special mode for this option
+is to send all received packets to standard output when the outfile is
+specified as '-'.  In this case all diagnostic program output will be
+redirected to standard error.
+
+.IP "-i \fItype\fR"
+Send an information request; the returned raw XML response is printed.
+Supported information types are: STATUS, STREAMS and CONNECTIONS.  The
+results of STREAMS and CONNNECTIONS queries can be limited to specific
+streams or connections using the \fB-m\fP and \fB-r\fP options.
+.PP
+Formatted information requests can be made with these options:
+
+.nf
+-I   print server status and either exit or repeat at interval
+-Q   print stream list and either exit or repeat at interval
+-C   print connection list and either exit or repeat at interval
+.fi
+
+.IP "\fI[host][:][port]\fR"
+A required argument, specifies the address of the DataLink server in
+host:port format.  Either the host, port or both can be omitted.  If
+host is omitted then localhost is assumed, i.e. ':16000'
+implies 'localhost:16000'.  If the port is omitted then 16000 is
+assumed, i.e. 'localhost' implies 'localhost:16000'.  If only ':' is
+specified 'localhost:16000' is assumed.
+
+.IP "\fI[repeat]\fR"
+A repeat interval in seconds for server information queries.
+
+.SH "EXAMPLES"
+.IP
+The following would connect to a DataLink server at data.host.edu port
+16000 and print details of all received packets.  Since no match or
+reject patterns were specified the server will send all data.
+
+.B >dalitool -p data.host.edu:16000
+
+The '-m' and '-r' arguments can be used to limit the data packets, in
+the following packets with stream IDs beginning with "US" are matched
+and packets with stream IDs beginning with "US_DMGT" are rejected.
+This would effectively select the US network data streams with the
+exception of station DGMT.  Port 16000 will be assumed as none is
+specified.
+
+.B >dalitool -v -p -m '^US.*' -r '^US_DGMT.*' data.host.edu
+
+.IP
+The following requests and formats a list of current streams in the
+server.
+
+.B >dalitool -S data.host.edu
+
+An information request can be continuously repeated by supplying a
+repeat interval, for example to print the connection list every 5
+seconds:
+
+.B >dalitool -C data.host.edu 5
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi
