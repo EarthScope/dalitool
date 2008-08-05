@@ -6,11 +6,16 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2008.196
+ * modified: 2008.218
  ***************************************************************************/
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 #include <libdali.h>
 
@@ -85,7 +90,7 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
   ezxml_t status, connectionlist, connection;
   char *rootname = ezxml_name(xmldoc);
   const char *selectedcount, *totalcount;
-  const char *type, *host, *port;
+  const char *type, *hostname, *host, *port;
   const char *clientid, *conntime;
   const char *match, *reject;
   const char *pktid, *pktdatatime;
@@ -94,6 +99,9 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
   const char *latency, *percentlag;
   char timestr[50];
   dltime_t now;
+
+  struct in_addr addr;
+  struct hostent *hp;
   
   now = dlp_time();
   
@@ -140,9 +148,23 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
       clientid = ezxml_attr (connection, "ClientID");
       conntime = ezxml_attr (connection, "ConnectionTime");
       
-      printf ("%s:%s (%s)  %s  %s\n",
-	      (host)?host:"-",
+      /* Resolve IP to hostname if possible */
+      hostname = host;
+      if ( host )
+	{
+	  if ( inet_pton ( AF_INET, host, &addr ) )
+	    {
+	      if ( (hp = gethostbyaddr((char *) &addr, sizeof(addr), AF_INET)) )
+		{
+		  hostname = hp->h_name;
+		}
+	    }
+	}
+      
+      printf ("%s:%s [%s]\n  [%s]  %s  %s\n",
+	      (hostname)?hostname:"-",
 	      (port)?port:"-",
+	      (host)?host:"-",
 	      (type)?type:"-",
 	      (clientid)?clientid:"-",
 	      (conntime)?conntime:"-");

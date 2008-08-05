@@ -1,3 +1,6 @@
+2008.218:
+	- Add resolved hostnames to formatted client list output.
+
 2008.196:
 	- Update to libdali 1.0.
 	- Include more details in formatted Status INFO requests.
