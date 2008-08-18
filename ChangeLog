@@ -1,3 +1,8 @@
+2008.231:
+	- Include distinct IP and hostnames as reported by the 
+	server to the formatted client list output.
+	- Remove hostname resolution code.
+
 2008.218:
 	- Add resolved hostnames to formatted client list output.
 
