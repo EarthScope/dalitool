@@ -51,9 +51,10 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
     {
       if ( verbose >= 1 )
 	{
-	  printf ("Ring size: %s, Packet size: %s, Memory-mapped: %s\n",
-		  ezxml_attr (status, "RingSize"), ezxml_attr (status, "PacketSize"),
-		  ezxml_attr (status, "MemoryMapped"));
+	  printf ("Ring size: %s, Packet size: %s\n",
+		  ezxml_attr (status, "RingSize"), ezxml_attr (status, "PacketSize"));
+	  printf ("Memory-mapped ring: %s, Volatile ring: %s\n",
+		  ezxml_attr (status, "MemoryMappedRing"), ezxml_attr (status, "VolatileRing"));
 	  printf ("Max packet ID: %s, Max packets: %s\n",
 		  ezxml_attr (status, "MaximumPacketID"), ezxml_attr (status, "MaximumPackets"));
 	}

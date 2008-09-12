@@ -30,6 +30,7 @@ static char ppackets       = 0;     /* Flag to control printing of data packets 
 static char psamples       = 0;     /* Flag to control printing of data samples */
 static char formatinfo     = 0;     /* Flag to control formatting of INFO XML */
 static int repeatint       = 0;     /* Repeat interval for INFO requests */
+static char formatlevel    = 0;     /* Flag to control formatted output verbosity */
 static char *statefile     = 0;	    /* State file for saving/restoring the seq. no. */
 static char *matchpattern  = 0;	    /* Source ID matching expression */
 static char *rejectpattern = 0;	    /* Source ID rejecting expression */
@@ -117,7 +118,7 @@ main (int argc, char **argv)
 	return -1;
     }
   
-  /* Request INFO and print returned XML */
+  /* Request INFO and print returned XML either formatted nicely or not */
   if ( infotype )
     {
       /* Initialize next request time stamp */
@@ -135,9 +136,11 @@ main (int argc, char **argv)
 		  dl_log (2, 0, "Problem requesting INFO from server\n");
 		  return -1;
 		}
-	      
+	
+	      /* Print formatted INFO */
 	      if ( formatinfo )
 		info_handler (infotype, infobuf);
+	      /* Print raw XML */
 	      else
 		printf ("%.*s\n", infolen, infobuf);
 	      
@@ -288,15 +291,15 @@ info_handler (char *infotype, char *infodata)
   /* Print formatted information */
   if ( ! strncasecmp (infotype, "STATUS", 6) )
     {
-      prtinfo_status (xmldoc, verbose);
+      prtinfo_status (xmldoc, formatlevel);
     }
   else if ( ! strncasecmp (infotype, "CONNECTIONS", 11) )
     {
-      prtinfo_connections (xmldoc, verbose);
+      prtinfo_connections (xmldoc, formatlevel);
     }
   else if ( ! strncasecmp (infotype, "STREAMS", 7) )
     {
-      prtinfo_streams (xmldoc, verbose);
+      prtinfo_streams (xmldoc, formatlevel);
     }
   else
     {
@@ -391,6 +394,10 @@ parameter_proc (int argcount, char **argvec)
 	{
 	  infotype = "CONNECTIONS";
 	  formatinfo = 1;
+	}
+      else if (strncmp (argvec[optind], "-f", 2) == 0)
+	{
+	  formatlevel += strspn (&argvec[optind][1], "f");
 	}
       else if (strncmp (argvec[optind], "-", 1) == 0)
         {
@@ -648,9 +655,10 @@ usage (void)
 	   " -i type         send info request, type is one of the following:\n"
 	   "                   STATUS, STREAMS, CONNECTIONS\n"
 	   "                   the returned raw XML is displayed when using this option\n"
-	   " -I              print formatted server id, versus and status\n"
+	   " -I              print formatted server id, version and status\n"
 	   " -S              print formatted stream list (if supported by server)\n"
 	   " -C              print formatted connection list (if supported by server)\n"
+	   " -f              increase level of details included in formatted output\n"
 	   "\n"
 	   " [host][:][port] Address of the DataLink server in host:port format\n"
 	   "                   Default host is 'localhost' and default port is '16000'\n"

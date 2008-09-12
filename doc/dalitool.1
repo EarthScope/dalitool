@@ -1,4 +1,4 @@
-.TH DALITOOL 1 2008/03/11
+.TH DALITOOL 1 2008/09/12
 .SH NAME
 dalitool \- DataLink client for data stream inspection and server queries
 
@@ -95,6 +95,11 @@ Formatted information requests can be made with these options:
 -Q   print stream list and either exit or repeat at interval
 -C   print connection list and either exit or repeat at interval
 .fi
+
+.IP "-f         "
+Increase the level of detail printed for formatted INFO responses.
+This flag can be used multiple times ("-f -f" or "-ff") for increased
+levels.
 
 .IP "\fI[host][:][port]\fR"
 A required argument, specifies the address of the DataLink server in

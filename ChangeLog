@@ -5,6 +5,9 @@
 	- Change the formatted STREAMS output to calculate a stream's
 	latency as the difference between the current time and the
 	end time of the stream, now equal to DMC's "data latency".
+	- Add the -f option to increase the level of details printed
+	when formatting INFO responses.
+	- Add volatile ring status to formatted STATUS output.
 
 2008.231:
 	- Include distinct IP and hostnames as reported by the 
