@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2008.231
+ * modified: 2008.256
  ***************************************************************************/
 
 #include <stdio.h>
@@ -65,10 +65,14 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 	      ezxml_attr (status, "RXPacketRate"), ezxml_attr (status, "RXByteRate"));
       printf ("  Output: %s packets/sec, %s bytes/sec\n",
 	      ezxml_attr (status, "TXPacketRate"), ezxml_attr (status, "TXByteRate"));
-      printf ("  Earliest Packet: %s (%s)\n",
-	      ezxml_attr (status, "EarliestPacketDataTime"), ezxml_attr (status, "EarliestPacketID"));
-      printf ("  Latest Packet: %s (%s)\n",
-	      ezxml_attr (status, "LatestPacketDataTime"), ezxml_attr (status, "LatestPacketID"));
+      printf ("  Earliest Packet: %s - %s (%s)\n",
+	      ezxml_attr (status, "EarliestPacketDataStartTime"),
+	      ezxml_attr (status, "EarliestPacketDataEndTime"),
+	      ezxml_attr (status, "EarliestPacketID"));
+      printf ("  Latest Packet: %s - %s (%s)\n",
+	      ezxml_attr (status, "LatestPacketDataStartTime"),
+	      ezxml_attr (status, "LatestPacketDataEndTime"),
+	      ezxml_attr (status, "LatestPacketID"));
     }
   
 }  /* End of prtinfo_status() */
@@ -88,7 +92,7 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
   const char *type, *host, *ip, *port;
   const char *clientid, *conntime;
   const char *match, *reject;
-  const char *pktid, *pktdatatime;
+  const char *pktid, *pktdatastart;
   const char *txpackets, *txpacketrate, *txbytes, *txbyterate;
   const char *rxpackets, *rxpacketrate, *rxbytes, *rxbyterate;
   const char *latency, *percentlag;
@@ -150,13 +154,13 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
 	      (conntime)?conntime:"-");
       
       pktid = ezxml_attr (connection, "PacketID");
-      pktdatatime = ezxml_attr (connection, "PacketDataTime");
+      pktdatastart = ezxml_attr (connection, "PacketDataStartTime");
       percentlag = ezxml_attr (connection, "PercentLag");
       latency = ezxml_attr (connection, "Latency");
       
       printf ("  Packet %s (%s)  Lag %s%s, %s seconds\n",
 	      (pktid)?pktid:"-",
-	      (pktdatatime)?pktdatatime:"-",
+	      (pktdatastart)?pktdatastart:"-",
 	      (percentlag)?percentlag:"-", (*percentlag != '-')?"%":"",
 	      (latency)?latency:"-");
       
@@ -216,12 +220,13 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
   char *rootname = ezxml_name(xmldoc);
   const char *selectedcount, *totalcount;
   const char *name;
-  const char *earliestid, *earliesttime;
-  const char *latestid, *latesttime;
+  const char *earliestid, *earlieststart;
+  const char *latestid, *lateststart;
+  const char *latestend;
   char timestr[50];
   char latencystr[50];
   dltime_t now;
-  dltime_t datatime;
+  dltime_t endtime;
   
   now = dlp_time();
   
@@ -253,14 +258,15 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
     {
       name = ezxml_attr (stream, "Name");
       earliestid = ezxml_attr (stream, "EarliestPacketID");
-      earliesttime = ezxml_attr (stream, "EarliestPacketDataTime");
+      earlieststart = ezxml_attr (stream, "EarliestPacketDataStartTime");
       latestid = ezxml_attr (stream, "LatestPacketID");
-      latesttime = ezxml_attr (stream, "LatestPacketDataTime");
+      lateststart = ezxml_attr (stream, "LatestPacketDataStartTime");
+      latestend = ezxml_attr (stream, "LatestPacketDataEndTime");
       
-      if ( latesttime )
+      if ( latestend )
 	{
-	  datatime = dl_timestr2dltime ((char *)latesttime);
-	  snprintf (latencystr, sizeof(latencystr), "%.1f", (double)(now - datatime) / DLTMODULUS);
+	  endtime = dl_timestr2dltime ((char *)latestend);
+	  snprintf (latencystr, sizeof(latencystr), "%.1f", (double)(now - endtime) / DLTMODULUS);
 	}
       else
 	{
@@ -270,16 +276,16 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
       if ( verbose >= 1 )
 	printf ("%-22s %-26s (%s)  %-26s (%s)  %s seconds\n",
 		(name)?name:"-",
-		(earliesttime)?earliesttime:"-",
+		(earlieststart)?earlieststart:"-",
 		(earliestid)?earliestid:"-",
-		(latesttime)?latesttime:"-",
+		(lateststart)?lateststart:"-",
 		(latestid)?latestid:"-",
 		latencystr);
       else
 	printf ("%-22s %-26s  %-26s  %s seconds\n",
 		(name)?name:"-",
-		(earliesttime)?earliesttime:"-",
-		(latesttime)?latesttime:"-",
+		(earlieststart)?earlieststart:"-",
+		(lateststart)?lateststart:"-",
 		latencystr);
     }
   

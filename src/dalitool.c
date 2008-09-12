@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified 2008.080
+ * modified 2008.256
  ***************************************************************************/
 
 #include <stdio.h>
@@ -23,7 +23,7 @@
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2008.231"
+#define VERSION   "2008.256"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
 static char ppackets       = 0;     /* Flag to control printing of data packets */
@@ -205,55 +205,48 @@ packet_handler (DLPacket *dlpacket, void *packetdata)
   
   now = dlp_time();
   
-  /* Parse packet type from stream ID */
-  if ( dl_splitstreamid (dlpacket->streamid, NULL, NULL, NULL, NULL, type) )
-    {
-      dl_log (2, 0, "Error parsing stream ID: %s\n", dlpacket->streamid);
-      return;
-    }
+  /* Print basic packet details */
+  dl_dltime2seedtimestr (dlpacket->datastart, timestr, 1);
+  dl_log (0, 0, "%s (%lld), %s, %d (data: %.1f sec, feed: %.1f sec)\n",
+	  dlpacket->streamid, dlpacket->pktid, timestr, dlpacket->datasize,
+	  ((double)(now - dlpacket->dataend) / DLTMODULUS),
+	  ((double)(now - dlpacket->pkttime) / DLTMODULUS));
   
-  /* Handle MSEED packet types */
-  if ( ! strncmp (type, "MSEED", sizeof(type)) )
+  /* Print packet and sample details if requested */
+  if ( ppackets > 0 )
     {
-      MSRecord *msr = 0;
-      
-      rv = msr_unpack (packetdata, dlpacket->datasize, &msr, psamples, 0);
-      
-      if ( rv != MS_NOERROR )
+      /* Parse packet type from stream ID */
+      if ( dl_splitstreamid (dlpacket->streamid, NULL, NULL, NULL, NULL, type) )
 	{
-	  dl_log (2, 0, "Cannot parse Mini-SEED record: %s\n", ms_errorstr(rv));
+	  dl_log (2, 0, "Error parsing stream ID: %s\n", dlpacket->streamid);
+	  return;
 	}
-      else
+      
+      /* Handle MSEED packet types */
+      if ( ! strncmp (type, "MSEED", sizeof(type)) )
 	{
-	  /* Print basic packet details */
-	  dl_dltime2seedtimestr (dlpacket->datatime, timestr, 1);
-	  dl_log (0, 0, "%s (%lld), %s, %d (data: %.1f sec, feed: %.1f sec)\n",
-		  dlpacket->streamid, dlpacket->pktid, timestr, dlpacket->datasize,
-		  ((double)(now - msr_endtime(msr)) / DLTMODULUS),
-		  ((double)(now - dlpacket->pkttime) / DLTMODULUS));
+	  MSRecord *msr = 0;
 	  
-	  /* Print more detailed packet details if requested */
-	  if ( ppackets > 0 )
+	  rv = msr_unpack (packetdata, dlpacket->datasize, &msr, psamples, 0);
+	  
+	  if ( rv != MS_NOERROR )
 	    {
+	      dl_log (2, 0, "Cannot parse Mini-SEED record: %s\n", ms_errorstr(rv));
+	    }
+	  else
+	    {
+	      /* Print more packet details */
 	      msr_print (msr, ppackets-1);
 	      
 	      if ( psamples )
 		msr_print_samples (msr);
 	    }
+	  
+	  msr_free (&msr);
 	}
-    }
-  /* This would be the place to add support for other packet types */
-  /* Otherwise this is an unrecognized packet type */
-  else
-    {
-      /* Print basic packet details */
-      dl_dltime2seedtimestr (dlpacket->datatime, timestr, 1);
-      dl_log (0, 0, "%s (%lld), %s, %d (data: %.1f sec, feed: %.1f sec)\n",
-	      dlpacket->streamid, dlpacket->pktid, timestr, dlpacket->datasize,
-	      ((double)(now - dlpacket->datatime) / DLTMODULUS),
-	      ((double)(now - dlpacket->pkttime) / DLTMODULUS));
-      
-      if ( ppackets > 0 )
+      /* This would be the place to add support for other packet types */
+      /* Otherwise this is an unrecognized packet type */
+      else
 	{
 	  dl_log (2, 0, "Unrecognized packet type: %s\n", type);
 	}
