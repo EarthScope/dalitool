@@ -226,7 +226,6 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
   const char *latestend, *datalatency;
   char timestr[50];
   dltime_t now;
-  dltime_t endtime;
   
   now = dlp_time();
   
