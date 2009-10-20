@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2008.256
+ * modified: 2009.292
  ***************************************************************************/
 
 #include <stdio.h>
@@ -223,9 +223,8 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
   const char *name;
   const char *earliestid, *earlieststart;
   const char *latestid, *lateststart;
-  const char *latestend;
+  const char *latestend, *datalatency;
   char timestr[50];
-  char latencystr[50];
   dltime_t now;
   dltime_t endtime;
   
@@ -263,16 +262,7 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
       latestid = ezxml_attr (stream, "LatestPacketID");
       lateststart = ezxml_attr (stream, "LatestPacketDataStartTime");
       latestend = ezxml_attr (stream, "LatestPacketDataEndTime");
-      
-      if ( latestend )
-	{
-	  endtime = dl_timestr2dltime ((char *)latestend);
-	  snprintf (latencystr, sizeof(latencystr), "%.1f", (double)(now - endtime) / DLTMODULUS);
-	}
-      else
-	{
-	  strncpy (latencystr, "-", sizeof(latencystr));
-	}
+      datalatency = ezxml_attr (stream, "DataLatency");
       
       if ( verbose >= 1 )
 	printf ("%-22s %-26s (%s)  %-26s (%s)  %s seconds\n",
@@ -281,13 +271,13 @@ prtinfo_streams (ezxml_t xmldoc, int verbose)
 		(earliestid)?earliestid:"-",
 		(lateststart)?lateststart:"-",
 		(latestid)?latestid:"-",
-		latencystr);
+		(datalatency)?datalatency:"-");
       else
 	printf ("%-22s %-26s  %-26s  %s seconds\n",
 		(name)?name:"-",
 		(earlieststart)?earlieststart:"-",
 		(lateststart)?lateststart:"-",
-		latencystr);
+		(datalatency)?datalatency:"-");
     }
   
   totalcount = ezxml_attr (streamlist, "TotalStreams");

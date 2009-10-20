@@ -1,3 +1,7 @@
+2009.292:
+	- Change the formatted STREAMS output to report the DataLatency
+	returned by the server instead of a client-side calculation.
+
 2008.256:
 	- Update libdali to 1.1.
 	- Rework printing of packet due to availability of packet
