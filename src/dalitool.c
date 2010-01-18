@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified 2009.292
+ * modified 2010.018
  ***************************************************************************/
 
 #include <stdio.h>
@@ -23,7 +23,7 @@
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2009.292"
+#define VERSION   "2010.018"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
 static char ppackets       = 0;     /* Flag to control printing of data packets */

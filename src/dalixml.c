@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2009.292
+ * modified: 2010.018
  ***************************************************************************/
 
 #include <stdio.h>
@@ -25,8 +25,13 @@
 void
 prtinfo_status (ezxml_t xmldoc, int verbose)
 {
-  ezxml_t status;
+  ezxml_t status, serverthreads, thread;
   char *rootname = ezxml_name(xmldoc);
+  const char *id, *flags, *type;
+  const char *port;
+  const char *dir, *maxrecur, *statefile, *match, *reject;
+  const char *packetrate, *byterate;
+  const char *totalthreads;
   char timestr[50];
   
   if ( strcmp (rootname, "DataLink") )
@@ -74,6 +79,51 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 	      ezxml_attr (status, "LatestPacketDataStartTime"),
 	      ezxml_attr (status, "LatestPacketDataEndTime"),
 	      ezxml_attr (status, "LatestPacketID"));
+    }
+  
+  if ( verbose >= 1 && (serverthreads = ezxml_child (xmldoc, "ServerThreads")) )
+    {
+      printf ("\n");
+      printf ("  Server threads:\n");
+      
+      for (thread = ezxml_child (serverthreads, "Thread"); thread; thread = ezxml_next(thread))
+	{
+	  id = ezxml_attr (thread, "ID");
+	  flags = ezxml_attr (thread, "Flags");
+	  type = ezxml_attr (thread, "Type");
+	  
+	  /* Skip initial spaces in flags */
+	  while ( *flags == ' ' ) flags++;
+	  
+	  printf ("    %s: %s (%s)\n", (type)?type:"-", (flags)?flags:"-", (id)?id:"-");
+	  
+	  if ( type && (! strcmp (type, "DataLink Server") || ! strcmp (type, "SeedLink Server")) )
+	    {
+	      port = ezxml_attr (thread, "Port");
+	      printf ("      Port %s\n", (port)?port:"-");
+	    }
+	  else if ( type && ! strcmp (type, "Mini-SEED Scanner") )
+	    {
+	      dir = ezxml_attr (thread, "Directory");
+	      maxrecur = ezxml_attr (thread, "MaxRecursion");
+	      statefile = ezxml_attr (thread, "StateFile");
+	      match = ezxml_attr (thread, "Match");
+	      reject = ezxml_attr (thread, "Reject");
+	      packetrate = ezxml_attr (thread, "PacketRate");
+	      byterate = ezxml_attr (thread, "ByteRate");
+	      
+	      printf ("      Directory %s, MaxRecursion: %s, StateFile: %s\n",
+		      (dir)?dir:"-", (maxrecur)?maxrecur:"-", (statefile)?statefile:"-");
+	      printf ("      Filename Match: %s, Reject: %s\n",
+		      (match)?match:"-", (reject)?reject:"-");	      
+	      printf ("      PacketRate %s, ByteRate: %s\n",
+		      (packetrate)?packetrate:"-", (byterate)?byterate:"-");
+	    }
+	}
+      
+      printf ("\n");
+      totalthreads = ezxml_attr (serverthreads, "TotalServerThreads");
+      printf ("  Total server threads: %s\n", (totalthreads)?totalthreads:"-");
     }
   
 }  /* End of prtinfo_status() */

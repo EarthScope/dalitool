@@ -1,3 +1,7 @@
+2010.018:
+	- Add verbose printing of new ServerThreads element returned for
+	a STATUS (ID) request.
+
 2009.292:
 	- Change the formatted STREAMS output to report the DataLatency
 	returned by the server instead of a client-side calculation.
