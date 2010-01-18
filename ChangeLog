@@ -1,6 +1,8 @@
 2010.018:
 	- Add verbose printing of new ServerThreads element returned for
 	a STATUS (ID) request.
+	- Add verbose printing of new StreamCount attribute returned for
+	a CONNECTIONS request.
 
 2009.292:
 	- Change the formatted STREAMS output to report the DataLatency

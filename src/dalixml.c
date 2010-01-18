@@ -144,6 +144,7 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
   const char *clientid, *conntime;
   const char *match, *reject;
   const char *pktid, *pktdatastart;
+  const char *streamcount;
   const char *txpackets, *txpacketrate, *txbytes, *txbyterate;
   const char *rxpackets, *rxpacketrate, *rxbytes, *rxbyterate;
   const char *latency, *percentlag;
@@ -217,6 +218,8 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
       
       if ( verbose >= 1 )
 	{
+	  streamcount = ezxml_attr (connection, "StreamCount");
+
 	  txpackets = ezxml_attr (connection, "TXPacketCount");
 	  txpacketrate = ezxml_attr (connection, "TXPacketRate");
 	  txbytes = ezxml_attr (connection, "TXByteCount");
@@ -226,6 +229,8 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
 	  rxpacketrate = ezxml_attr (connection, "RXPacketRate");
 	  rxbytes = ezxml_attr (connection, "RXByteCount");
 	  rxbyterate = ezxml_attr (connection, "RXByteRate");
+	  
+	  printf ("  Stream count: %s\n", (streamcount)?streamcount:"-");
 	  
 	  printf ("  TX %s packets %s packets/sec  %s bytes %s bytes/sec\n",
 		  (txpackets)?txpackets:"-",
