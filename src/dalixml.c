@@ -116,7 +116,7 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 		      (dir)?dir:"-", (maxrecur)?maxrecur:"-", (statefile)?statefile:"-");
 	      printf ("      Filename Match: %s, Reject: %s\n",
 		      (match)?match:"-", (reject)?reject:"-");	      
-	      printf ("      PacketRate %s, ByteRate: %s\n",
+	      printf ("      PacketRate: %s, ByteRate: %s\n",
 		      (packetrate)?packetrate:"-", (byterate)?byterate:"-");
 	    }
 	}
