@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2010.018
+ * modified: 2010.020
  ***************************************************************************/
 
 #include <stdio.h>
@@ -27,7 +27,7 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 {
   ezxml_t status, serverthreads, thread;
   char *rootname = ezxml_name(xmldoc);
-  const char *id, *flags, *type;
+  const char *flags, *type;
   const char *port;
   const char *dir, *maxrecur, *statefile, *match, *reject;
   const char *packetrate, *byterate;
@@ -88,14 +88,13 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
       
       for (thread = ezxml_child (serverthreads, "Thread"); thread; thread = ezxml_next(thread))
 	{
-	  id = ezxml_attr (thread, "ID");
 	  flags = ezxml_attr (thread, "Flags");
 	  type = ezxml_attr (thread, "Type");
 	  
 	  /* Skip initial spaces in flags */
 	  while ( *flags == ' ' ) flags++;
 	  
-	  printf ("    %s: %s (%s)\n", (type)?type:"-", (flags)?flags:"-", (id)?id:"-");
+	  printf ("    %s: %s\n", (type)?type:"-", (flags)?flags:"-");
 	  
 	  if ( type && (! strcmp (type, "DataLink Server") || ! strcmp (type, "SeedLink Server")) )
 	    {

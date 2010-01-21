@@ -1,3 +1,7 @@
+2010.020:
+	Remove parsing of non-portable thread ID in Thread element of 
+	STATUS return information.
+
 2010.018:
 	- Add verbose printing of new ServerThreads element returned for
 	a STATUS (ID) request.
