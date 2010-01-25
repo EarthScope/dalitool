@@ -23,7 +23,7 @@
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2010.020"
+#define VERSION   "2010.025"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
 static char ppackets       = 0;     /* Flag to control printing of data packets */

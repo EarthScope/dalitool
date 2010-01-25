@@ -6,7 +6,7 @@
  * Written by:
  *   Chad Trabant, IRIS Data Management Center
  *
- * modified: 2010.020
+ * modified: 2010.025
  ***************************************************************************/
 
 #include <stdio.h>
@@ -30,7 +30,7 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
   const char *flags, *type;
   const char *port;
   const char *dir, *maxrecur, *statefile, *match, *reject;
-  const char *packetrate, *byterate;
+  const char *scantime, *packetrate, *byterate;
   const char *totalthreads;
   char timestr[50];
   
@@ -94,12 +94,12 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 	  /* Skip initial spaces in flags */
 	  while ( *flags == ' ' ) flags++;
 	  
-	  printf ("    %s: %s\n", (type)?type:"-", (flags)?flags:"-");
+	  printf ("    %s [%s]\n", (type)?type:"-", (flags)?flags:"-");
 	  
 	  if ( type && (! strcmp (type, "DataLink Server") || ! strcmp (type, "SeedLink Server")) )
 	    {
 	      port = ezxml_attr (thread, "Port");
-	      printf ("      Port %s\n", (port)?port:"-");
+	      printf ("      Port: %s\n", (port)?port:"-");
 	    }
 	  else if ( type && ! strcmp (type, "Mini-SEED Scanner") )
 	    {
@@ -108,15 +108,16 @@ prtinfo_status (ezxml_t xmldoc, int verbose)
 	      statefile = ezxml_attr (thread, "StateFile");
 	      match = ezxml_attr (thread, "Match");
 	      reject = ezxml_attr (thread, "Reject");
+	      scantime = ezxml_attr (thread, "ScanTime");
 	      packetrate = ezxml_attr (thread, "PacketRate");
 	      byterate = ezxml_attr (thread, "ByteRate");
 	      
-	      printf ("      Directory %s, MaxRecursion: %s, StateFile: %s\n",
+	      printf ("      Directory '%s', MaxRecursion: %s, StateFile: '%s'\n",
 		      (dir)?dir:"-", (maxrecur)?maxrecur:"-", (statefile)?statefile:"-");
 	      printf ("      Filename Match: %s, Reject: %s\n",
-		      (match)?match:"-", (reject)?reject:"-");	      
-	      printf ("      PacketRate: %s, ByteRate: %s\n",
-		      (packetrate)?packetrate:"-", (byterate)?byterate:"-");
+		      (match)?match:"-", (reject)?reject:"-");
+	      printf ("      Scanning: %s seconds, %s packets/sec, %s bytes/sec\n",
+		      (scantime)?scantime:"-",(packetrate)?packetrate:"-", (byterate)?byterate:"-");
 	    }
 	}
       
@@ -218,7 +219,7 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
       if ( verbose >= 1 )
 	{
 	  streamcount = ezxml_attr (connection, "StreamCount");
-
+	  
 	  txpackets = ezxml_attr (connection, "TXPacketCount");
 	  txpacketrate = ezxml_attr (connection, "TXPacketRate");
 	  txbytes = ezxml_attr (connection, "TXByteCount");
@@ -228,8 +229,6 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
 	  rxpacketrate = ezxml_attr (connection, "RXPacketRate");
 	  rxbytes = ezxml_attr (connection, "RXByteCount");
 	  rxbyterate = ezxml_attr (connection, "RXByteRate");
-	  
-	  printf ("  Stream count: %s\n", (streamcount)?streamcount:"-");
 	  
 	  printf ("  TX %s packets %s packets/sec  %s bytes %s bytes/sec\n",
 		  (txpackets)?txpackets:"-",
@@ -242,6 +241,8 @@ prtinfo_connections (ezxml_t xmldoc, int verbose)
 		  (rxpacketrate)?rxpacketrate:"-",
 		  (rxbytes)?rxbytes:"-",
 		  (rxbyterate)?rxbyterate:"-");
+	  
+	  printf ("  Stream count: %s\n", (streamcount)?streamcount:"-");	  
 	}
       
       if ( verbose >= 2 )
