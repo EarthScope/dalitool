@@ -1,9 +1,10 @@
-2010.025:
+2010.027:
+	- Update libdali to 1.2.
 	- Include printing of ScanTime as returned in STATUS info requests.
-	- Cleanup STATUS info ouput for clarity.
+	- Cleanup STATUS info output for clarity.
 
 2010.020:
-	Remove parsing of non-portable thread ID in Thread element of 
+	- Remove parsing of non-portable thread ID in Thread element of 
 	STATUS return information.
 
 2010.018:
