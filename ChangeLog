@@ -1,3 +1,6 @@
+2011.003:
+	- Update libdali to 1.3.
+
 2010.027:
 	- Update libdali to 1.2.
 	- Include printing of ScanTime as returned in STATUS info requests.

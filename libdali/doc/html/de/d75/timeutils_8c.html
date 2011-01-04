@@ -31,9 +31,19 @@ Include dependency graph for timeutils.c:</div>
 </div>
 <table border="0" cellpadding="0" cellspacing="0">
 <tr><td></td></tr>
+<tr><td colspan="2"><br><h2>Defines</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="bfd0478fd92fb317fbc5ba80f47a7e53"></a><!-- doxytag: member="timeutils.c::TM_LEAP_CHECK" ref="bfd0478fd92fb317fbc5ba80f47a7e53" args="(n)" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>TM_LEAP_CHECK</b>(n)&nbsp;&nbsp;&nbsp;((!(((n) + 1900) % 400) || (!(((n) + 1900) % 4) &amp;&amp; (((n) + 1900) % 100))) != 0)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ab74a49878c61dca4a3391bd4c75f5bf"></a><!-- doxytag: member="timeutils.c::TM_WRAP" ref="ab74a49878c61dca4a3391bd4c75f5bf" args="(a, b, m)" -->
+#define&nbsp;</td><td class="memItemRight" valign="bottom"><b>TM_WRAP</b>(a, b, m)&nbsp;&nbsp;&nbsp;((a) = ((a) &lt;  0  ) ? ((b)--, (a) + (m)) : (a))</td></tr>
+
 <tr><td colspan="2"><br><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="00c4f9b7994660df4aba4f6dad474809"></a><!-- doxytag: member="timeutils.c::dl_time2dltime_int" ref="00c4f9b7994660df4aba4f6dad474809" args="(int year, int day, int hour, int min, int sec, int usec)" -->
 static <a class="el" href="../../d3/d41/libdali_8h.html#d46ecd16ed2b512a60d5f948fa15a31f">dltime_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><b>dl_time2dltime_int</b> (int year, int day, int hour, int min, int sec, int usec)</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="anchor" name="ec75cfa483fcb753548ffde7dc0a75ff"></a><!-- doxytag: member="timeutils.c::dl_gmtime_r" ref="ec75cfa483fcb753548ffde7dc0a75ff" args="(int64_t *timep, struct tm *result)" -->
+static struct tm *&nbsp;</td><td class="memItemRight" valign="bottom"><b>dl_gmtime_r</b> (int64_t *timep, struct tm *result)</td></tr>
 
 <tr><td class="memItemLeft" nowrap align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d75/timeutils_8c.html#22b3f0400b7977eca301ffaac4f85c98">dl_doy2md</a> (int year, int jday, int *month, int *mday)</td></tr>
 
@@ -59,11 +69,16 @@ static <a class="el" href="../../d3/d41/libdali_8h.html#d46ecd16ed2b512a60d5f948
 <tr><td class="memItemLeft" nowrap align="right" valign="top"><a class="el" href="../../d3/d41/libdali_8h.html#d46ecd16ed2b512a60d5f948fa15a31f">dltime_t</a>&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="../../de/d75/timeutils_8c.html#e9b707c84806c9dac959a1c37da7f6b7">dl_timestr2dltime</a> (char *timestr)</td></tr>
 
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Convert a time string to a dltime_t value.  <a href="#e9b707c84806c9dac959a1c37da7f6b7"></a><br></td></tr>
+<tr><td colspan="2"><br><h2>Variables</h2></td></tr>
+<tr><td class="memItemLeft" nowrap align="right" valign="top">const char&nbsp;</td><td class="memItemRight" valign="bottom"><b>pivotal_gmtime_r_stamp</b> []</td></tr>
+
+<tr><td class="memItemLeft" nowrap align="right" valign="top">static const int&nbsp;</td><td class="memItemRight" valign="bottom"><b>tm_days</b> [4][13]</td></tr>
+
 </table>
 <hr><a name="_details"></a><h2>Detailed Description</h2>
 General time utility routines and routines for dealing with libdali time values of dltime_t type.<p>
 <dl class="author" compact><dt><b>Author:</b></dt><dd>Chad Trabant, IRIS Data Management Center</dd></dl>
-modified: 2008.193 <hr><h2>Function Documentation</h2>
+modified: 2011.003 <hr><h2>Function Documentation</h2>
 <a class="anchor" name="337c1bd25624f6b3bd5ae105296e4c62"></a><!-- doxytag: member="timeutils.c::dl_dltime2isotimestr" ref="337c1bd25624f6b3bd5ae105296e4c62" args="(dltime_t dltime, char *isotimestr, int8_t subseconds)" -->
 <div class="memitem">
 <div class="memproto">
@@ -446,8 +461,48 @@ Ranges are checked for each time value.<p>
 
 </div>
 </div><p>
+<hr><h2>Variable Documentation</h2>
+<a class="anchor" name="4b65d292ae4ca7cfa4336bea949543e5"></a><!-- doxytag: member="timeutils.c::pivotal_gmtime_r_stamp" ref="4b65d292ae4ca7cfa4336bea949543e5" args="[]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char pivotal_gmtime_r_stamp[]          </td>
+        </tr>
+      </table>
 </div>
-<hr size="1"><address style="text-align: right;"><small>Generated on Fri Sep 12 15:38:54 2008 for libdali by&nbsp;
+<div class="memdoc">
+
+<p>
+<b>Initial value:</b><div class="fragment"><pre class="fragment">
+  <span class="stringliteral">"pivotal_gmtime_r. Copyright (C) 2009  Paul Sheer. Terms and "</span>
+  <span class="stringliteral">"conditions apply. Visit http://2038bug.com/ for more info."</span>
+</pre></div>
+</div>
+</div><p>
+<a class="anchor" name="10ad4ca6841bf0c667b7eb43f23d7c8b"></a><!-- doxytag: member="timeutils.c::tm_days" ref="10ad4ca6841bf0c667b7eb43f23d7c8b" args="[4][13]" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const int tm_days[4][13]<code> [static]</code>          </td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>
+<b>Initial value:</b><div class="fragment"><pre class="fragment"> {
+  {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+  {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+  {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+  {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366},
+}
+</pre></div>
+</div>
+</div><p>
+</div>
+<hr size="1"><address style="text-align: right;"><small>Generated on Mon Jan 3 23:38:35 2011 for libdali by&nbsp;
 <a href="http://www.doxygen.org/index.html">
 <img src="../../doxygen.png" alt="doxygen" align="middle" border="0"></a> 1.5.6 </small></address>
 </body>
