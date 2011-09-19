@@ -57,7 +57,7 @@
 
 2008.070:
 	- Update to libdali 0.9.1.
-        - For INFO CONNECTIONS requests submit a client matching pattern
+	- For INFO CONNECTIONS requests submit a client matching pattern
 	if -m is specified.
 	- Include both total and selected counts of connections and
 	streams in formatted INFO output.
