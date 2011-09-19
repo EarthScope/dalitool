@@ -6,7 +6,7 @@
  * Chad Trabant
  * IRIS Data Management Center
  *
- * modified: 2006.331
+ * modified: 2010.253
  ***************************************************************************/
 
 #include <stdio.h>
@@ -17,8 +17,8 @@
 #include "libmseed.h"
 
 void ms_loginit_main (MSLogParam *logp,
-		      void (*log_print)(const char*), const char *logprefix,
-		      void (*diag_print)(const char*), const char *errprefix);
+		      void (*log_print)(char*), const char *logprefix,
+		      void (*diag_print)(char*), const char *errprefix);
 
 int ms_log_main (MSLogParam *logp, int level, va_list *varlist);
 
@@ -34,8 +34,8 @@ MSLogParam gMSLogParam = {NULL, NULL, NULL, NULL};
  * See ms_loginit_main() description for usage.
  ***************************************************************************/
 void
-ms_loginit (void (*log_print)(const char*), const char *logprefix,
-	    void (*diag_print)(const char*), const char *errprefix)
+ms_loginit (void (*log_print)(char*), const char *logprefix,
+	    void (*diag_print)(char*), const char *errprefix)
 {
   ms_loginit_main(&gMSLogParam, log_print, logprefix, diag_print, errprefix);
 }  /* End of ms_loginit() */
@@ -55,8 +55,8 @@ ms_loginit (void (*log_print)(const char*), const char *logprefix,
  ***************************************************************************/
 MSLogParam *
 ms_loginit_l (MSLogParam *logp,
-	      void (*log_print)(const char*), const char *logprefix,
-	      void (*diag_print)(const char*), const char *errprefix)
+	      void (*log_print)(char*), const char *logprefix,
+	      void (*diag_print)(char*), const char *errprefix)
 {
   MSLogParam *llog;
   
@@ -110,8 +110,8 @@ ms_loginit_l (MSLogParam *logp,
  ***************************************************************************/
 void
 ms_loginit_main (MSLogParam *logp,
-		 void (*log_print)(const char*), const char *logprefix,
-		 void (*diag_print)(const char*), const char *errprefix)
+		 void (*log_print)(char*), const char *logprefix,
+		 void (*diag_print)(char*), const char *errprefix)
 {
   if ( ! logp )
     return;
@@ -242,7 +242,13 @@ ms_log_main (MSLogParam *logp, int level, va_list *varlist)
   int retvalue = 0;
   int presize;
   const char *format;
-
+  
+  if ( ! logp )
+    {
+      fprintf(stderr, "ms_log_main() called without specifying log parameters");
+      return -1;
+    }
+  
   message[0] = '\0';
 
   format = va_arg (*varlist, const char *);

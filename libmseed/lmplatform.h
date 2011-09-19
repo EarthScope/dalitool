@@ -18,7 +18,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2007.179
+ * modified: 2010.304
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -27,7 +27,23 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-  
+
+  /* On some platforms (e.g. ARM) structures are aligned on word boundaries
+     by adding padding between the elements.  This library uses structs that
+     map to SEED header/blockette structures that are required to have a
+     layout exactly as specified, i.e. no padding.
+
+     If "ATTRIBUTE_PACKED" is defined at compile time (e.g. -DATTRIBUTE_PACKED)
+     the preprocessor will use the define below to add the "packed" attribute 
+     to effected structs.  This attribute is supported by GCC and increasingly
+     more compilers.
+  */
+#if defined(ATTRIBUTE_PACKED)
+  #define LMP_PACKED __attribute__((packed))
+#else
+  #define LMP_PACKED
+#endif
+
   /* Make some guesses about the system libraries based
    * on the architecture.  Currently the assumptions are:
    * Linux => glibc2 libraries (LMP_GLIBC2)
@@ -82,7 +98,7 @@ extern "C" {
   #include <string.h>
   #include <ctype.h>
 
-#elif defined(WIN32)
+#elif defined(WIN32) || defined(WIN64)
   #define LMP_WIN32 1
 
   #include <windows.h>
@@ -92,10 +108,15 @@ extern "C" {
   #include <sys/types.h>
   #include <ctype.h>
 
-  #define snprintf _snprintf
-  #define vsnprintf _vsnprintf
-  #define strcasecmp _stricmp
-  #define strncasecmp _strnicmp
+  #if defined(_MSC_VER)
+    #define snprintf _snprintf
+    #define vsnprintf _vsnprintf
+    #define strcasecmp _stricmp
+    #define strncasecmp _strnicmp
+    #define strtoull _strtoui64
+    #define strdup _strdup
+    #define fileno _fileno
+  #endif
 
   typedef signed char int8_t;
   typedef unsigned char uint8_t;

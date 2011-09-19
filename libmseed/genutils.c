@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2007.228
+ * modified: 2011.124
  ***************************************************************************/
 
 #include <stdio.h>
@@ -15,10 +15,13 @@
 #include <string.h>
 #include <time.h>
 
+#include "lmplatform.h"
 #include "libmseed.h"
 
 static hptime_t ms_time2hptime_int (int year, int day, int hour,
 				    int min, int sec, int usec);
+
+static struct tm *ms_gmtime_r (int64_t *timep, struct tm *result);
 
 
 /***************************************************************************
@@ -61,6 +64,113 @@ ms_recsrcname (char *record, char *srcname, flag quality)
   
   return srcname;
 } /* End of ms_recsrcname() */
+
+
+/***************************************************************************
+ * ms_splitsrcname:
+ *
+ * Split srcname into separate components: "NET_STA_LOC_CHAN[_QUAL]".
+ * Memory for each component must already be allocated.  If a specific
+ * component is not desired set the appropriate argument to NULL.
+ *
+ * Returns 0 on success and -1 on error.
+ ***************************************************************************/
+int
+ms_splitsrcname (char *srcname, char *net, char *sta, char *loc, char *chan,
+		 char *qual)
+{
+  char *id;
+  char *ptr, *top, *next;
+  int sepcnt = 0;
+  
+  if ( ! srcname )
+    return -1;
+  
+  /* Verify number of separating underscore characters */
+  id = srcname;
+  while ( (id = strchr (id, '_')) )
+    {
+      id++;
+      sepcnt++;
+    }
+  
+  /* Either 3 or 4 separating underscores are required */
+  if ( sepcnt != 3 && sepcnt != 4 )
+    {
+      return -1;
+    }
+  
+  /* Duplicate srcname */
+  if ( ! (id = strdup(srcname)) )
+    {
+      fprintf (stderr, "ms_splitsrcname(): Error duplicating srcname string");
+      return -1;
+    }
+  
+  /* Network */
+  top = id;
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( net )
+	strcpy (net, top);
+      
+      top = next;
+    }
+  /* Station */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( sta )
+	strcpy (sta, top);
+      
+      top = next;
+    }
+  /* Location */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( loc )
+	strcpy (loc, top);
+      
+      top = next;
+    }
+  /* Channel & optional Quality */
+  if ( (ptr = strchr (top, '_')) )
+    {
+      next = ptr + 1;
+      *ptr = '\0';
+      
+      if ( chan )
+	strcpy (chan, top);
+      
+      top = next;
+      
+      /* Quality */
+      if ( *top && qual )
+	{
+	  /* Quality is a single character */
+	  *qual = *top;
+	}
+    }
+  /* Otherwise only Channel */
+  else if ( *top && chan )
+    {
+      strcpy (chan, top);
+    }
+  
+  /* Free duplicated stream ID */
+  if ( id )
+    free (id);
+  
+  return 0;
+}  /* End of ms_splitsrcname() */
 
 
 /***************************************************************************
@@ -165,7 +275,7 @@ ms_strncpopen (char *dest, const char *source, int length)
  *
  * Compute the month and day-of-month from a year and day-of-year.
  *
- * Year is expected to be in the range 1900-2100, jday is expected to
+ * Year is expected to be in the range 1800-5000, jday is expected to
  * be in the range 1-366, month will be in the range 1-12 and mday
  * will be in the range 1-31.
  *
@@ -179,7 +289,7 @@ ms_doy2md(int year, int jday, int *month, int *mday)
   int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   
   /* Sanity check for the supplied year */
-  if ( year < 1900 || year > 2100 )
+  if ( year < 1800 || year > 5000 )
     {
       ms_log (2, "ms_doy2md(): year (%d) is out of range\n", year);
       return -1;
@@ -219,7 +329,7 @@ ms_doy2md(int year, int jday, int *month, int *mday)
  *
  * Compute the day-of-year from a year, month and day-of-month.
  *
- * Year is expected to be in the range 1900-2100, month is expected to
+ * Year is expected to be in the range 1800-5000, month is expected to
  * be in the range 1-12, mday is expected to be in the range 1-31 and
  * jday will be in the range 1-366.
  *
@@ -233,7 +343,7 @@ ms_md2doy(int year, int month, int mday, int *jday)
   int days[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   
   /* Sanity check for the supplied parameters */
-  if ( year < 1900 || year > 2100 )
+  if ( year < 1800 || year > 5000 )
     {
       ms_log (2, "ms_md2doy(): year (%d) is out of range\n", year);
       return -1;
@@ -313,7 +423,7 @@ ms_btime2hptime (BTime *btime)
   
   days = (365 * (shortyear - 70) + intervening_leap_days + (btime->day - 1));
   
-  hptime = (hptime_t ) (60 * (60 * (24 * days + btime->hour) + btime->min) + btime->sec) * HPTMODULUS
+  hptime = (hptime_t ) (60 * (60 * ((hptime_t) 24 * days + btime->hour) + btime->min) + btime->sec) * HPTMODULUS
     + (btime->fract * (HPTMODULUS / 10000));
     
   return hptime;
@@ -437,18 +547,17 @@ ms_btime2seedtimestr (BTime *btime, char *seedtimestr)
 int
 ms_hptime2btime (hptime_t hptime, BTime *btime)
 {
-  struct tm *tm;
-  int isec;
+  struct tm tms;
+  int64_t isec;
   int ifract;
   int bfract;
-  time_t tsec;
   
   if ( btime == NULL )
     return -1;
   
   /* Reduce to Unix/POSIX epoch time and fractional seconds */
   isec = MS_HPTIME2EPOCH(hptime);
-  ifract = hptime - ((hptime_t)isec * HPTMODULUS);
+  ifract = (int)(hptime - (isec * HPTMODULUS));
   
   /* BTime only has 1/10000 second precision */
   bfract = ifract / (HPTMODULUS / 10000);
@@ -464,15 +573,14 @@ ms_hptime2btime (hptime_t hptime, BTime *btime)
       bfract = 10000 - (-bfract);
     }
 
-  tsec = (time_t) isec;
-  if ( ! (tm = gmtime ( &tsec )) )
+  if ( ! (ms_gmtime_r (&isec, &tms)) )
     return -1;
   
-  btime->year   = tm->tm_year + 1900;
-  btime->day    = tm->tm_yday + 1;
-  btime->hour   = tm->tm_hour;
-  btime->min    = tm->tm_min;
-  btime->sec    = tm->tm_sec;
+  btime->year   = tms.tm_year + 1900;
+  btime->day    = tms.tm_yday + 1;
+  btime->hour   = tms.tm_hour;
+  btime->min    = tms.tm_min;
+  btime->sec    = tms.tm_sec;
   btime->unused = 0;
   btime->fract  = (uint16_t) bfract;
   
@@ -497,18 +605,17 @@ ms_hptime2btime (hptime_t hptime, BTime *btime)
 char *
 ms_hptime2isotimestr (hptime_t hptime, char *isotimestr, flag subseconds)
 {
-  struct tm *tm;
-  int isec;
+  struct tm tms;
+  int64_t isec;
   int ifract;
   int ret;
-  time_t tsec;
 
   if ( isotimestr == NULL )
     return NULL;
 
   /* Reduce to Unix/POSIX epoch time and fractional seconds */
   isec = MS_HPTIME2EPOCH(hptime);
-  ifract = (hptime_t) hptime - (isec * HPTMODULUS);
+  ifract = (int)(hptime - (isec * HPTMODULUS));
   
   /* Adjust for negative epoch times */
   if ( hptime < 0 && ifract != 0 )
@@ -516,20 +623,19 @@ ms_hptime2isotimestr (hptime_t hptime, char *isotimestr, flag subseconds)
       isec -= 1;
       ifract = HPTMODULUS - (-ifract);
     }
-
-  tsec = (time_t) isec;
-  if ( ! (tm = gmtime ( &tsec )) )
+  
+  if ( ! (ms_gmtime_r (&isec, &tms)) )
     return NULL;
   
   if ( subseconds )
     /* Assuming ifract has at least microsecond precision */
     ret = snprintf (isotimestr, 27, "%4d-%02d-%02dT%02d:%02d:%02d.%06d",
-                    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec, ifract);
+                    tms.tm_year + 1900, tms.tm_mon + 1, tms.tm_mday,
+                    tms.tm_hour, tms.tm_min, tms.tm_sec, ifract);
   else
     ret = snprintf (isotimestr, 20, "%4d-%02d-%02dT%02d:%02d:%02d",
-                    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec);
+                    tms.tm_year + 1900, tms.tm_mon + 1, tms.tm_mday,
+                    tms.tm_hour, tms.tm_min, tms.tm_sec);
 
   if ( ret != 26 && ret != 19 )
     return NULL;
@@ -555,18 +661,17 @@ ms_hptime2isotimestr (hptime_t hptime, char *isotimestr, flag subseconds)
 char *
 ms_hptime2mdtimestr (hptime_t hptime, char *mdtimestr, flag subseconds)
 {
-  struct tm *tm;
-  int isec;
+  struct tm tms;
+  int64_t isec;
   int ifract;
   int ret;
-  time_t tsec;
-
+  
   if ( mdtimestr == NULL )
     return NULL;
 
   /* Reduce to Unix/POSIX epoch time and fractional seconds */
   isec = MS_HPTIME2EPOCH(hptime);
-  ifract = (hptime_t) hptime - (isec * HPTMODULUS);
+  ifract = (int)(hptime - (isec * HPTMODULUS));
 
   /* Adjust for negative epoch times */
   if ( hptime < 0 && ifract != 0 )
@@ -574,20 +679,19 @@ ms_hptime2mdtimestr (hptime_t hptime, char *mdtimestr, flag subseconds)
       isec -= 1;
       ifract = HPTMODULUS - (-ifract);
     }
-
-  tsec = (time_t) isec;
-  if ( ! (tm = gmtime ( &tsec )) )
+  
+  if ( ! (ms_gmtime_r (&isec, &tms)) )
     return NULL;
 
   if ( subseconds )
     /* Assuming ifract has at least microsecond precision */
     ret = snprintf (mdtimestr, 27, "%4d-%02d-%02d %02d:%02d:%02d.%06d",
-                    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec, ifract);
+                    tms.tm_year + 1900, tms.tm_mon + 1, tms.tm_mday,
+                    tms.tm_hour, tms.tm_min, tms.tm_sec, ifract);
   else
     ret = snprintf (mdtimestr, 20, "%4d-%02d-%02d %02d:%02d:%02d",
-                    tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec);
+                    tms.tm_year + 1900, tms.tm_mon + 1, tms.tm_mday,
+                    tms.tm_hour, tms.tm_min, tms.tm_sec);
 
   if ( ret != 26 && ret != 19 )
     return NULL;
@@ -612,18 +716,17 @@ ms_hptime2mdtimestr (hptime_t hptime, char *mdtimestr, flag subseconds)
 char *
 ms_hptime2seedtimestr (hptime_t hptime, char *seedtimestr, flag subseconds)
 {
-  struct tm *tm;
-  int isec;
+  struct tm tms;
+  int64_t isec;
   int ifract;
   int ret;
-  time_t tsec;
   
   if ( seedtimestr == NULL )
     return NULL;
   
   /* Reduce to Unix/POSIX epoch time and fractional seconds */
   isec = MS_HPTIME2EPOCH(hptime);
-  ifract = (hptime_t) hptime - (isec * HPTMODULUS);
+  ifract = (int)(hptime - (isec * HPTMODULUS));
   
   /* Adjust for negative epoch times */
   if ( hptime < 0 && ifract != 0 )
@@ -631,21 +734,20 @@ ms_hptime2seedtimestr (hptime_t hptime, char *seedtimestr, flag subseconds)
       isec -= 1;
       ifract = HPTMODULUS - (-ifract);
     }
-
-  tsec = (time_t) isec;
-  if ( ! (tm = gmtime ( &tsec )) )
+  
+  if ( ! (ms_gmtime_r (&isec, &tms)) )
     return NULL;
   
   if ( subseconds )
     /* Assuming ifract has at least microsecond precision */
     ret = snprintf (seedtimestr, 25, "%4d,%03d,%02d:%02d:%02d.%06d",
-		    tm->tm_year + 1900, tm->tm_yday + 1,
-		    tm->tm_hour, tm->tm_min, tm->tm_sec, ifract);
+		    tms.tm_year + 1900, tms.tm_yday + 1,
+		    tms.tm_hour, tms.tm_min, tms.tm_sec, ifract);
   else
     /* Assuming ifract has at least microsecond precision */
     ret = snprintf (seedtimestr, 18, "%4d,%03d,%02d:%02d:%02d",
-                    tm->tm_year + 1900, tm->tm_yday + 1,
-                    tm->tm_hour, tm->tm_min, tm->tm_sec);
+                    tms.tm_year + 1900, tms.tm_yday + 1,
+                    tms.tm_hour, tms.tm_min, tms.tm_sec);
   
   if ( ret != 24 && ret != 17 )
     return NULL;
@@ -703,7 +805,7 @@ ms_time2hptime_int (int year, int day, int hour, int min, int sec, int usec)
  * checking for each input value.
  *
  * Expected ranges:
- * year : 1900 - 2100
+ * year : 1800 - 5000
  * day  : 1 - 366
  * hour : 0 - 23
  * min  : 0 - 59
@@ -715,7 +817,7 @@ ms_time2hptime_int (int year, int day, int hour, int min, int sec, int usec)
 hptime_t
 ms_time2hptime (int year, int day, int hour, int min, int sec, int usec)
 {
-  if ( year < 1900 || year > 2100 )
+  if ( year < 1800 || year > 5000 )
     {
       ms_log (2, "ms_time2hptime(): Error with year value: %d\n", year);
       return HPTERROR;
@@ -799,7 +901,7 @@ ms_seedtimestr2hptime (char *seedtimestr)
       return HPTERROR;
     }
   
-  if ( year < 1900 || year > 3000 )
+  if ( year < 1800 || year > 5000 )
     {
       ms_log (2, "ms_seedtimestr2hptime(): Error with year value: %d\n", year);
       return HPTERROR;
@@ -870,8 +972,8 @@ ms_timestr2hptime (char *timestr)
   int sec  = 0;
   float fusec = 0.0;
   int usec = 0;
-    
-  fields = sscanf (timestr, "%d%*[-/:.]%d%*[-/:.]%d%*[-/:.T ]%d%*[-/:.]%d%*[- /:.]%d%f",
+  
+  fields = sscanf (timestr, "%d%*[-/:.]%d%*[-/:.]%d%*[-/:.Tt ]%d%*[-/:.]%d%*[- /:.]%d%f",
 		   &year, &mon, &mday, &hour, &min, &sec, &fusec);
   
   /* Convert fractional seconds to microseconds */
@@ -886,7 +988,7 @@ ms_timestr2hptime (char *timestr)
       return HPTERROR;
     }
   
-  if ( year < 1900 || year > 3000 )
+  if ( year < 1800 || year > 5000 )
     {
       ms_log (2, "ms_timestr2hptime(): Error with year value: %d\n", year);
       return HPTERROR;
@@ -936,6 +1038,32 @@ ms_timestr2hptime (char *timestr)
   
   return ms_time2hptime_int (year, day, hour, min, sec, usec);
 }  /* End of ms_timestr2hptime() */
+
+
+/***************************************************************************
+ * ms_nomsamprate:
+ *
+ * Calculate a sample rate from SEED sample rate factor and multiplier
+ * as stored in the fixed section header of data records.
+ * 
+ * Returns the positive sample rate.
+ ***************************************************************************/
+double
+ms_nomsamprate (int factor, int multiplier)
+{
+  double samprate = 0.0;
+  
+  if ( factor > 0 )
+    samprate = (double) factor;
+  else if ( factor < 0 )
+    samprate = -1.0 / (double) factor;
+  if ( multiplier > 0 )
+    samprate = samprate * (double) multiplier;
+  else if ( multiplier < 0 )
+    samprate = -1.0 * (samprate / (double) multiplier);
+  
+  return samprate;
+}  /* End of ms_nomsamprate() */
 
 
 /***************************************************************************
@@ -1079,3 +1207,153 @@ ms_dabs (double val)
     val *= -1.0;
   return val;
 }  /* End of ms_dabs() */
+
+
+/***************************************************************************
+ * ms_gmtime_r:
+ *
+ * An internal version of gmtime_r() that is 64-bit compliant and
+ * works with years beyond 2038.
+ *
+ * The original was called pivotal_gmtime_r() by Paul Sheer, all
+ * required copyright and other hoohas are below.  Modifications were
+ * made to integrate the original to this code base, avoid name
+ * collisions and formatting so I could read it.
+ * 
+ * Returns a pointer to the populated tm struct on success and NULL on error.
+ ***************************************************************************/
+
+/* pivotal_gmtime_r - a replacement for gmtime/localtime/mktime
+                      that works around the 2038 bug on 32-bit
+                      systems. (Version 4)
+
+   Copyright (C) 2009  Paul Sheer
+
+   Redistribution and use in source form, with or without modification,
+   is permitted provided that the above copyright notice, this list of
+   conditions, the following disclaimer, and the following char array
+   are retained.
+
+   Redistribution and use in binary form must reproduce an
+   acknowledgment: 'With software provided by http://2038bug.com/' in
+   the documentation and/or other materials provided with the
+   distribution, and wherever such acknowledgments are usually
+   accessible in Your program.
+
+   This software is provided "AS IS" and WITHOUT WARRANTY, either
+   express or implied, including, without limitation, the warranties of
+   NON-INFRINGEMENT, MERCHANTABILITY or FITNESS FOR A PARTICULAR
+   PURPOSE. THE ENTIRE RISK AS TO THE QUALITY OF THIS SOFTWARE IS WITH
+   YOU. Under no circumstances and under no legal theory, whether in
+   tort (including negligence), contract, or otherwise, shall the
+   copyright owners be liable for any direct, indirect, special,
+   incidental, or consequential damages of any character arising as a
+   result of the use of this software including, without limitation,
+   damages for loss of goodwill, work stoppage, computer failure or
+   malfunction, or any and all other commercial damages or losses. This
+   limitation of liability shall not apply to liability for death or
+   personal injury resulting from copyright owners' negligence to the
+   extent applicable law prohibits such limitation. Some jurisdictions
+   do not allow the exclusion or limitation of incidental or
+   consequential damages, so this exclusion and limitation may not apply
+   to You.
+
+*/
+
+const char pivotal_gmtime_r_stamp[] =
+  "pivotal_gmtime_r. Copyright (C) 2009  Paul Sheer. Terms and "
+  "conditions apply. Visit http://2038bug.com/ for more info.";
+
+static const int tm_days[4][13] = {
+  {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+  {31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31},
+  {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365},
+  {0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366},
+};
+
+#define TM_LEAP_CHECK(n) ((!(((n) + 1900) % 400) || (!(((n) + 1900) % 4) && (((n) + 1900) % 100))) != 0)
+#define TM_WRAP(a,b,m)   ((a) = ((a) <  0  ) ? ((b)--, (a) + (m)) : (a))
+
+static struct tm *
+ms_gmtime_r (int64_t *timep, struct tm *result)
+{
+  int v_tm_sec, v_tm_min, v_tm_hour, v_tm_mon, v_tm_wday, v_tm_tday;
+  int leap;
+  long m;
+  int64_t tv;
+  
+  if ( ! timep || ! result )
+    return NULL;
+  
+  tv = *timep;
+  
+  v_tm_sec = ((int64_t) tv % (int64_t) 60);
+  tv /= 60;
+  v_tm_min = ((int64_t) tv % (int64_t) 60);
+  tv /= 60;
+  v_tm_hour = ((int64_t) tv % (int64_t) 24);
+  tv /= 24;
+  v_tm_tday = (int)tv;
+  
+  TM_WRAP (v_tm_sec, v_tm_min, 60);
+  TM_WRAP (v_tm_min, v_tm_hour, 60);
+  TM_WRAP (v_tm_hour, v_tm_tday, 24);
+  
+  if ( (v_tm_wday = (v_tm_tday + 4) % 7) < 0 )
+    v_tm_wday += 7;
+  
+  m = (long) v_tm_tday;
+  
+  if ( m >= 0 )
+    {
+      result->tm_year = 70;
+      leap = TM_LEAP_CHECK (result->tm_year);
+      
+      while ( m >= (long) tm_days[leap + 2][12] )
+	{
+	  m -= (long) tm_days[leap + 2][12];
+	  result->tm_year++;
+	  leap = TM_LEAP_CHECK (result->tm_year);
+	}
+      
+      v_tm_mon = 0;
+      
+      while ( m >= (long) tm_days[leap][v_tm_mon] )
+	{
+	  m -= (long) tm_days[leap][v_tm_mon];
+	  v_tm_mon++;
+	}
+    }
+  else
+    {
+      result->tm_year = 69;
+      leap = TM_LEAP_CHECK (result->tm_year);
+      
+      while ( m < (long) -tm_days[leap + 2][12] )
+	{
+	  m += (long) tm_days[leap + 2][12];
+	  result->tm_year--;
+	  leap = TM_LEAP_CHECK (result->tm_year);
+	}
+      
+      v_tm_mon = 11;
+      
+      while ( m < (long) -tm_days[leap][v_tm_mon] )
+	{
+	  m += (long) tm_days[leap][v_tm_mon];
+	  v_tm_mon--;
+	}
+      
+      m += (long) tm_days[leap][v_tm_mon];
+    }
+  
+  result->tm_mday = (int) m + 1;
+  result->tm_yday = tm_days[leap + 2][v_tm_mon] + m;
+  result->tm_sec = v_tm_sec;
+  result->tm_min = v_tm_min;
+  result->tm_hour = v_tm_hour;
+  result->tm_mon = v_tm_mon;
+  result->tm_wday = v_tm_wday;
+  
+  return result;
+}  /* End of ms_gmtime_r() */
