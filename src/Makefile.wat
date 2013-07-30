@@ -16,12 +16,13 @@ INCS = -I..\libdali -I..\ezxml -I..\libmseed
 
 all: $(BIN)
 
-$(BIN):	dalixml.obj dalitool.obj
-	wlink $(lflags) name $(BIN) file {archive.obj dsarchive.obj dalixml.obj dalitool.obj}
+$(BIN):	dlconsole.obj dalixml.obj dalitool.obj
+	wlink $(lflags) name $(BIN) file {dlconsole.obj dalixml.obj dalitool.obj}
 
 # Source dependencies:
+dlconsole.obj:	dlconsole.c dlconsole.h
 dalitxml.obj:	dalixml.c dalixml.h
-dalitool.obj:	dalitool.c dsarchive.h dalixml.h
+dalitool.obj:	dalitool.c dsarchive.h dlconsole.h dalixml.h
 
 # How to compile sources:
 .c.obj:

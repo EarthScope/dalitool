@@ -14,7 +14,7 @@ LDLIBS  = -ldali -lezxml -lmseed
 
 BIN  = ../dalitool
 
-OBJS = dalixml.o dalitool.o
+OBJS = dlconsole.o dalixml.o dalitool.o
 
 all: $(BIN)
 

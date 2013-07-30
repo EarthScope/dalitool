@@ -5,13 +5,14 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified 2010.018
+ * modified 2013.210
  ***************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
 
 #ifndef WIN32
   #include <signal.h>
@@ -20,12 +21,14 @@
 #include <libdali.h>
 #include <libmseed.h>
 
+#include "dlconsole.h"
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2011.262"
+#define VERSION   "2013.210"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
+static char console        = 0;     /* Flag to control interactive console session */
 static char ppackets       = 0;     /* Flag to control printing of data packets */
 static char psamples       = 0;     /* Flag to control printing of data samples */
 static char formatinfo     = 0;     /* Flag to control formatting of INFO XML */
@@ -167,6 +170,24 @@ main (int argc, char **argv)
 	  /* If not repeating jump out */
 	  if ( ! repeatint )
 	    break;
+	}
+    }
+  /* Enter interactive console mode */
+  else if ( console )
+    {
+      while ( ! consolecmd (dlconn, &dlpacket, packetdata) )
+	{
+	  if ( verbose )
+	    {
+	      time_t now;
+	      struct tm *tp;
+	      
+	      now = time(NULL);
+	      tp = localtime (&now);
+	      fprintf (stdout, "%04d-%02d-%02d %02d:%02d:%02d\n",
+		       tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
+		       tp->tm_hour, tp->tm_min, tp->tm_sec);
+	    }
 	}
     }
   /* Otherwise collect packets in STREAMing mode */
@@ -343,6 +364,10 @@ parameter_proc (int argcount, char **argvec)
 	{
 	  verbose += strspn (&argvec[optind][1], "v");
 	}
+      else if (strncmp (argvec[optind], "-c", 2) == 0)
+        {
+          console = 1;
+        }
       else if (strncmp (argvec[optind], "-p", 2) == 0)
         {
           ppackets += strspn (&argvec[optind][1], "p");
@@ -642,6 +667,7 @@ usage (void)
 	   " -V              report program version\n"
 	   " -h              show this usage message\n"
 	   " -v              be more verbose, multiple flags can be used\n"
+	   " -c              console mode, provide an interactive prompt\n"
 	   " -p              print details of data packets, multiple flags can be used\n"
 	   " -d              print first 6 samples of each data packet\n"
 	   " -D              print all samples of each data packet\n"
