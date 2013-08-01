@@ -9,9 +9,9 @@ extern "C"
 {
 #endif
 
-extern void prtinfo_status (ezxml_t xmldoc, int verbose);
-extern void prtinfo_connections (ezxml_t xmldoc, int verbose);
-extern void prtinfo_streams (ezxml_t xmldoc, int verbose);
+extern void prtinfo_status (ezxml_t xmldoc, int verbose, FILE *prtstream);
+extern void prtinfo_connections (ezxml_t xmldoc, int verbose, FILE *prtstream);
+extern void prtinfo_streams (ezxml_t xmldoc, int verbose, FILE *prtstream);
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,8 @@ extern "C"
 {
 #endif
 
-extern int consolecmd (DLCP *dlconn, DLPacket *dlpacket, void *packetdata);
+extern int runconsole (DLCP *dlconn, DLPacket *dlpacket,
+		       void *packetdata, int verbose);
 
 #ifdef __cplusplus
 }

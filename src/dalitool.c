@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified 2013.210
+ * modified 2013.213
  ***************************************************************************/
 
 #include <stdio.h>
@@ -25,7 +25,7 @@
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2013.210"
+#define VERSION   "2013.213"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
 static char console        = 0;     /* Flag to control interactive console session */
@@ -175,19 +175,9 @@ main (int argc, char **argv)
   /* Enter interactive console mode */
   else if ( console )
     {
-      while ( ! consolecmd (dlconn, &dlpacket, packetdata) )
+      if ( runconsole (dlconn, &dlpacket, packetdata, verbose) )
 	{
-	  if ( verbose )
-	    {
-	      time_t now;
-	      struct tm *tp;
-	      
-	      now = time(NULL);
-	      tp = localtime (&now);
-	      fprintf (stdout, "%04d-%02d-%02d %02d:%02d:%02d\n",
-		       tp->tm_year+1900, tp->tm_mon+1, tp->tm_mday,
-		       tp->tm_hour, tp->tm_min, tp->tm_sec);
-	    }
+	  dl_log (2, 0, "Error running console()\n");
 	}
     }
   /* Otherwise collect packets in STREAMing mode */
@@ -312,15 +302,15 @@ info_handler (char *infotype, char *infodata)
   /* Print formatted information */
   if ( ! strncasecmp (infotype, "STATUS", 6) )
     {
-      prtinfo_status (xmldoc, formatlevel);
+      prtinfo_status (xmldoc, formatlevel, stdout);
     }
   else if ( ! strncasecmp (infotype, "CONNECTIONS", 11) )
     {
-      prtinfo_connections (xmldoc, formatlevel);
+      prtinfo_connections (xmldoc, formatlevel, stdout);
     }
   else if ( ! strncasecmp (infotype, "STREAMS", 7) )
     {
-      prtinfo_streams (xmldoc, formatlevel);
+      prtinfo_streams (xmldoc, formatlevel, stdout);
     }
   else
     {
