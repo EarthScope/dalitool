@@ -1,3 +1,8 @@
+2013.213:
+	- Update libdali to 1.6.
+	- Add console mode (-c option) with line editing/history.  Allows
+	interactive DataLink command and response.
+
 2011.262:
 	- Update libmseed to 2.6.1.
 	- Update libdali to 1.5.

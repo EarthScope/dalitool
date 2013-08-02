@@ -4,6 +4,15 @@
  * Routine for supporting an interactive console for DataLink.
  ***************************************************************************/
 
+// Add more commands, E.G. POSITION AFTER, more?
+
+// Add READ command
+
+// Add STREAM commmand
+
+// Add completions for command line
+
+
 #include <errno.h>
 #include <libmseed.h>
 #include <libdali.h>
@@ -30,6 +39,7 @@ static int handlinfo ( DLCP *dlconn, char *infotype, int formatlevel,
  *  REJECT [pattern]
  *  STATUS [-v]
  *  STREAMS [-v]
+ *  CONNECTIONS [pattern] [-v]
  *
  * Return 0 on success and non-zero on error or exit request.
  ***************************************************************************/
@@ -37,13 +47,14 @@ int
 runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
 {
   static char cmd[256] = "";
+  static int cmdlen = 0;
   char *line = NULL;
-  int cmdlen = 0;
   int linelen = 0;
   
-  char svalue[256];
-  long long int llvalue;
-  int rv;
+  char str1[256];
+  char str2[256];
+  char *strp[2] = {str1,str2};
+  int strc;
   
   FILE *outstream = stdout;
   
@@ -51,6 +62,8 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
     return -1;
   
   linenoiseHistorySetMaxLen (100);
+
+  fprintf (outstream, "DataLink Console, type 'help' to list available commands\n");
   
   while ( (line = linenoise ("DL> ")) != NULL )
     {
@@ -68,6 +81,8 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
       
       free (line);
       
+      strc = sscanf (cmd, "%*s %s %s", str1, str2);
+      
       /* Check for recognized commands and process */
       if ( ! strncasecmp (cmd, "EXIT", 4) ||
 	   ! strncasecmp (cmd, "QUIT", 4) ||
@@ -79,19 +94,20 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
       else if ( ! strncasecmp (cmd, "HELP", 4) )
 	{
 	  fprintf (outstream, "The following commands are supported:\n");
-	  fprintf (outstream, "EXIT,QUIT,BYE        Exit console mode\n");
-	  fprintf (outstream, "ID                   Print ID of server\n");
-	  fprintf (outstream, "PSET <packetID>      Issue POSITION SET command to position reader\n");
-	  fprintf (outstream, "MATCH [pattern]      Set MATCH expression to pattern\n");
-	  fprintf (outstream, "REJECT [pattern]     Set REJECT expression to pattern\n");
-	  fprintf (outstream, "STATUS [-v]>         Print server status\n");
-	  fprintf (outstream, "STREAMS [-v]>        Print server streams\n");
+	  fprintf (outstream, "EXIT,QUIT,BYE               Exit console mode\n");
+	  fprintf (outstream, "ID                          Print ID of server\n");
+	  fprintf (outstream, "PSET <packetID>             Issue POSITION SET command to position reader\n");
+	  fprintf (outstream, "MATCH [pattern]             Set MATCH expression to pattern\n");
+	  fprintf (outstream, "REJECT [pattern]            Set REJECT expression to pattern\n");
+	  fprintf (outstream, "STATUS [-v]>                Print server status\n");
+	  fprintf (outstream, "STREAMS [-v]>               Print server streams\n");
+	  fprintf (outstream, "CONNECTIONS [pattern] [-v]  Print server connections\n");
 	  fprintf (outstream, "\n");
 	}  /* End of HELP */
       else if ( ! strncasecmp (cmd, "ID", 2) )
 	{
-	  char sendstr[255];            /* Buffer for command strings */
-	  char respstr[255];            /* Buffer for server response */  
+	  char sendstr[255];      /* Buffer for command strings */
+	  char respstr[255];      /* Buffer for server response */
 	  int respsize;
 	  
 	  /* Send ID command including client ID and collect response */
@@ -121,33 +137,33 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
 	{
 	  int64_t pktid;
 	  
-	  if ( sscanf (cmd, "%*s %s", svalue) != 1 )
+	  if ( strc != 1 )
 	    {
 	      fprintf (outstream, "Unrecognized usage, try PSET <value>\n");
 	      
 	      continue;
 	    }
-	  else if ( ! strncasecmp (svalue, "EARLIEST", 8) )
+	  else if ( ! strncasecmp (str1, "EARLIEST", 8) )
 	    {
-	      llvalue = LIBDALI_POSITION_EARLIEST;
+	      pktid = LIBDALI_POSITION_EARLIEST;
 	    }
-	  else if ( ! strncasecmp (svalue, "LATEST", 6) )
+	  else if ( ! strncasecmp (str1, "LATEST", 6) )
 	    {
-	      llvalue = LIBDALI_POSITION_LATEST;
+	      pktid = LIBDALI_POSITION_LATEST;
 	    }
 	  else
 	    {
-	      llvalue = strtoll (svalue, NULL, 10);
+	      pktid = strtoll (str1, NULL, 10);
 	      
-	      if ( llvalue == 0 && errno == EINVAL )
+	      if ( pktid == 0 && errno == EINVAL )
 		{
-		  fprintf (outstream, "Unrecognized position value: %s\n", svalue);
+		  fprintf (outstream, "Unrecognized position value: %s\n", str1);
 		  
 		  continue;
 		}
 	    }
 	  
-	  pktid = dl_position (dlconn, llvalue, HPTERROR);
+	  pktid = dl_position (dlconn, pktid, HPTERROR);
 	  
 	  if ( pktid > 0 )
 	    {
@@ -155,20 +171,18 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
 	    }
 	  else if ( pktid == 0 )
 	    {
-	      fprintf (outstream, "Packet %s not found\n", svalue);
+	      fprintf (outstream, "Packet %s not found\n", str1);
 	    }
 	  else
 	    {
-	      fprintf (outstream, "Error requesting position %s\n", svalue);
+	      fprintf (outstream, "Error requesting position %s\n", str1);
 	    }
 	}  /* End of PSET */
       else if ( ! strncasecmp (cmd, "MATCH", 5) )
 	{
 	  int64_t count;
 	  
-	  rv = sscanf (cmd, "%*s %s", svalue);
-	  
-	  count = dl_match (dlconn, (rv>0) ? svalue : NULL);
+	  count = dl_match (dlconn, (strc>0) ? str1 : NULL);
 	  
 	  if ( count >= 0 )
 	    {
@@ -177,16 +191,14 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
 	  else
 	    {
 	      fprintf (outstream, "Error submitting match expression %s\n",
-		       (rv>0) ? svalue : "<NONE>");
+		       (strc>0) ? str1 : "<NONE>");
 	    }
 	}  /* End of MATCH */
       else if ( ! strncasecmp (cmd, "REJECT", 5) )
 	{
 	  int64_t count;
 	  
-	  rv = sscanf (cmd, "%*s %s", svalue);
-	  
-	  count = dl_reject (dlconn, (rv>0) ? svalue : NULL);
+	  count = dl_reject (dlconn, (strc>0) ? str1 : NULL);
 	  
 	  if ( count >= 0 )
 	    {
@@ -195,21 +207,21 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
 	  else
 	    {
 	      fprintf (outstream, "Error submitting reject expression %s\n",
-		       (rv>0) ? svalue : "<NONE>");
+		       (strc>0) ? str1 : "<NONE>");
 	    }
 	}  /* End of REJECT */
       else if ( ! strncasecmp (cmd, "STATUS", 6) )
 	{
 	  int formatlevel = 0;
-      
-	  if ( sscanf (cmd, "%*s %s", svalue) > 0 )
+	  
+	  if ( strc > 0 )
 	    {
-	      if ( strncmp (svalue, "-v", 2) == 0 )
+	      if ( strncmp (str1, "-v", 2) == 0 )
 		{
-		  formatlevel += strspn (svalue+1, "v");
+		  formatlevel += strspn (str1+1, "v");
 		}
 	    }
-      
+	  
 	  if ( handlinfo (dlconn, "STATUS", formatlevel, NULL, outstream) )
 	    {
 	      fprintf (outstream, "Error requesting STATUS\n");
@@ -218,12 +230,12 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
       else if ( ! strncasecmp (cmd, "STREAMS", 7) )
 	{
 	  int formatlevel = 0;
-      
-	  if ( sscanf (cmd, "%*s %s", svalue) > 0 )
+	  
+	  if ( strc > 0 )
 	    {
-	      if ( strncmp (svalue, "-v", 2) == 0 )
+	      if ( strncmp (str1, "-v", 2) == 0 )
 		{
-		  formatlevel += strspn (svalue+1, "v");
+		  formatlevel += strspn (str1+1, "v");
 		}
 	    }
 	  
@@ -235,16 +247,22 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata, int verbose)
       else if ( ! strncasecmp (cmd, "CONNECTIONS", 7) )
 	{
 	  int formatlevel = 0;
+	  char *matchptr = NULL;
+	  int si;
 	  
-	  if ( sscanf (cmd, "%*s %s", svalue) > 0 )
+	  for ( si = 0; si < strc; si++ )
 	    {
-	      if ( strncmp (svalue, "-v", 2) == 0 )
+	      if ( strncmp (strp[si], "-v", 2) == 0 )
 		{
-		  formatlevel += strspn (svalue+1, "v");
+		  formatlevel += strspn (strp[si]+1, "v");
+		}
+	      else
+		{
+		  matchptr = strp[si];
 		}
 	    }
 	  
-	  if ( handlinfo (dlconn, "CONNECTIONS", formatlevel, NULL, outstream) )
+	  if ( handlinfo (dlconn, "CONNECTIONS", formatlevel, matchptr, outstream) )
 	    {
 	      fprintf (outstream, "Error requesting CONNECTIONS\n");
 	    }
