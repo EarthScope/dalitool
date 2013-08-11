@@ -16,10 +16,12 @@ INCS = -I..\libdali -I..\ezxml -I..\libmseed
 
 all: $(BIN)
 
-$(BIN):	dlconsole.obj dalixml.obj dalitool.obj
-	wlink $(lflags) name $(BIN) file {dlconsole.obj dalixml.obj dalitool.obj}
+$(BIN):	linenoise.obj common.obj dlconsole.obj dalixml.obj dalitool.obj
+	wlink $(lflags) name $(BIN) file {linenoise.obj common.obj dlconsole.obj dalixml.obj dalitool.obj}
 
 # Source dependencies:
+linenoise.obj:	linenoise.c linenoise.h
+common.obj:	common.c common.h
 dlconsole.obj:	dlconsole.c dlconsole.h
 dalitxml.obj:	dalixml.c dalixml.h
 dalitool.obj:	dalitool.c dsarchive.h dlconsole.h dalixml.h

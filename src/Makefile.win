@@ -18,8 +18,8 @@ cflags = $(cflags) -DWIN32
 
 all: $(BIN)
 
-$(BIN):	dlconsole.obj dalixml.obj dalitool.obj
-	link.exe /nologo /out:$(BIN) $(LIBS) dlconsole.obj dalixml.obj dalitool.obj
+$(BIN):	linenoise.obj common.obj dlconsole.obj dalixml.obj dalitool.obj
+	link.exe /nologo /out:$(BIN) $(LIBS) linenoise.obj common.obj dlconsole.obj dalixml.obj dalitool.obj
 
 .c.obj:
    $(cc) /nologo $(cflags) $(cdebug) $(cvarsmt) $(tflags) $(INCS) $<
