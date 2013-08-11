@@ -10,7 +10,7 @@ extern "C"
 #endif
 
 extern int runconsole (DLCP *dlconn, DLPacket *dlpacket,
-		       void *packetdata, int verbose);
+		       void *packetdata, size_t maxdatasize, int verbose);
 
 #ifdef __cplusplus
 }
