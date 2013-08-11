@@ -1,4 +1,4 @@
-.TH DALITOOL 1 2008/09/12
+.TH DALITOOL 1 2013/08/11
 .SH NAME
 dalitool \- DataLink client for data stream inspection and server queries
 
@@ -12,6 +12,10 @@ dalitool [options] [host][:][port] [repeat]
 the server for information or collects selected data streams and prints
 information about the packets received.  All received packets can
 optionally be written to a single file.
+
+\fBdalitool\fP also has an interactive command-line console mode where
+DataLink commands are sent to the server and the response is printed.
+Console mode is initiated with the \fB-c\fP option.
 
 Results of server information queries can either be printed as raw XML
 as returned by the server or as formatted output.  If a repeat
@@ -29,6 +33,11 @@ Print program usage and exit.
 .IP "-v         "
 Be more verbose.  This flag can be used multiple times ("-v -v" or
 "-vv") for more verbosity.
+
+.IP "-c         "
+Connect to specified DataLink server and enter console mode, an
+interative command and response prompt.  Type 'help' to list available
+commands.
 
 .IP "-p         "
 Print details of received packets.  This flag can be used multiple
