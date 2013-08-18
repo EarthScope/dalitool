@@ -28,6 +28,7 @@ static int fetchinfo ( DLCP *dlconn, char *infotype,
  *
  * Commands recongnized:
  *  EXIT, QUIT, BYE
+ *  CONNECT [host:port]
  *  ID
  *  PSET <packetid>
  *  PAFTER <datatime>
@@ -49,6 +50,7 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
   static int cmdlen = 0;
   char *line = NULL;
   int linelen = 0;
+  char cbuf = '\0';
   
   char str1[256];
   char str2[256];
@@ -80,7 +82,32 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
       
       free (line);
       
+      /* Parse command options if specified */
       strc = sscanf (cmd, "%*s %s %s", str1, str2);
+      
+      /* Check for closed connection and re-connect if needed.
+       * Half-open (silently broken) connections cannot be detected
+       * until a command is issued. */
+      if ( dlconn->link == -1 || recv (dlconn->link, &cbuf, 1, MSG_PEEK) == 0 )
+	{
+	  fprintf (stdout, "Re-connecting to server... ");
+	  
+	  /* Close/cleanup existing connection if needed */
+	  if ( dlconn->link != -1 )
+	    {
+	      dl_disconnect (dlconn);
+	    }
+	  
+	  /* Connect to server */
+	  if ( dl_connect (dlconn) < 0 )
+	    {
+	      fprintf (stdout, "Error connecting to server\n");
+	    }
+	  else
+	    {
+	      fprintf (stdout, "Connected to %s\n", dlconn->addr);
+	    }
+	}
       
       /* Check for recognized commands and process */
       if ( ! strncasecmp (cmd, "EXIT", 4) ||
@@ -94,6 +121,7 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
 	{
 	  fprintf (stdout, "The following commands are supported:\n");
 	  fprintf (stdout, "EXIT,QUIT,BYE               Exit console mode\n");
+	  fprintf (stdout, "CONNECT [host:port]         Connect to server, optionally using address\n");
 	  fprintf (stdout, "ID                          Print ID of server\n");
 	  fprintf (stdout, "PSET <packetID>             Set position to packet ID (or LATEST or EARLIEST)\n");
 	  fprintf (stdout, "PAFTER <datatime>           Set position to packet after datatime\n");
@@ -284,7 +312,7 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
 	      fprintf (stdout, "Error requesting STREAMS\n");
 	    }
 	}  /* End of STREAMS */
-      else if ( ! strncasecmp (cmd, "CONNECTIONS", 7) )
+      else if ( ! strncasecmp (cmd, "CONNECTIONS", 11) )
 	{
 	  int formatlevel = 0;
 	  char *matchptr = NULL;
@@ -399,6 +427,30 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
 		}
 	    } /* End of STREAM collection loop */
 	}  /* End of STREAM */
+      else if ( ! strncasecmp (cmd, "CONNECT", 7) )
+	{
+	  /* Use server address if specified */
+	  if ( strc >= 1 )
+	    {
+	      strncpy (dlconn->addr, str1, sizeof(dlconn->addr));
+	    }
+	  
+	  /* Close existing connection if needed */
+	  if ( dlconn->link != -1 )
+	    {
+	      dl_disconnect (dlconn);
+	    }
+	  
+	  /* Connect to server */
+	  if ( dl_connect (dlconn) < 0 )
+	    {
+	      fprintf (stdout, "Error connecting to server\n");
+	    }
+	  else
+	    {
+	      fprintf (stdout, "Connected to %s\n", dlconn->addr);
+	    }
+	}  /* End of CONNECT */
       else if ( cmdlen > 0 )
 	{
 	  fprintf (stdout, "Unrecognized command: %s\n", cmd);
@@ -463,6 +515,7 @@ completion (const char *buf, linenoiseCompletions *lc)
   }
   else if (buf[0] == 'c') {
     linenoiseAddCompletion(lc,"connections");
+    linenoiseAddCompletion(lc,"connect");
   }
 }
 

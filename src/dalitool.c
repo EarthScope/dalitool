@@ -26,7 +26,7 @@
 #include "dalixml.h"
 
 #define PACKAGE   "dalitool"
-#define VERSION   "2013.223"
+#define VERSION   "2013.230"
 
 static char verbose        = 0;     /* Flag to control general verbosity */
 static char console        = 0;     /* Flag to control interactive console session */
