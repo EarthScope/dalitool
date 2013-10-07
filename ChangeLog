@@ -1,3 +1,6 @@
+2013.280:
+	- Add include of time.h in dlconsole.c, needed for Linux, etc.
+
 2013.277:
 	- Update libmseed to 2.12.
 
