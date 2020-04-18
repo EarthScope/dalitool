@@ -146,9 +146,6 @@ prtinfo_connections (ezxml_t xmldoc, int verbose, FILE *prtstream)
   const char *rxpackets, *rxpacketrate, *rxbytes, *rxbyterate;
   const char *latency, *percentlag;
   char timestr[50];
-  dltime_t now;
-
-  now = dlp_time ();
 
   if (strcmp (rootname, "DataLink"))
   {
@@ -274,11 +271,8 @@ prtinfo_streams (ezxml_t xmldoc, int verbose, FILE *prtstream)
   const char *name;
   const char *earliestid, *earlieststart;
   const char *latestid, *lateststart;
-  const char *latestend, *datalatency;
+  const char *datalatency;
   char timestr[50];
-  dltime_t now;
-
-  now = dlp_time ();
 
   if (strcmp (rootname, "DataLink"))
   {
@@ -311,7 +305,6 @@ prtinfo_streams (ezxml_t xmldoc, int verbose, FILE *prtstream)
     earlieststart = ezxml_attr (stream, "EarliestPacketDataStartTime");
     latestid      = ezxml_attr (stream, "LatestPacketID");
     lateststart   = ezxml_attr (stream, "LatestPacketDataStartTime");
-    latestend     = ezxml_attr (stream, "LatestPacketDataEndTime");
     datalatency   = ezxml_attr (stream, "DataLatency");
 
     if (verbose >= 1)

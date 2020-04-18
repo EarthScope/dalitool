@@ -142,7 +142,7 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
 
       /* Send ID command including client ID and collect response */
       snprintf (sendstr, sizeof (sendstr), "ID %s",
-                (dlconn->clientid) ? dlconn->clientid : "");
+                (dlconn->clientid[0] != '\0') ? dlconn->clientid : "");
 
       respsize = dl_sendpacket (dlconn, sendstr, strlen (sendstr), NULL, 0,
                                 respstr, sizeof (respstr));
@@ -432,7 +432,8 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
       /* Use server address if specified */
       if (strc >= 1)
       {
-        strncpy (dlconn->addr, str1, sizeof (dlconn->addr));
+        strncpy (dlconn->addr, str1, sizeof (dlconn->addr) - 1);
+        dlconn->addr[sizeof (dlconn->addr) - 1] = '\0';
       }
 
       /* Close existing connection if needed */
