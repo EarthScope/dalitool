@@ -24,7 +24,7 @@
 #include "dlconsole.h"
 
 #define PACKAGE "dalitool"
-#define VERSION "2013.280"
+#define VERSION "2023.335"
 
 static char verbose        = 0; /* Flag to control general verbosity */
 static char console        = 0; /* Flag to control interactive console session */
