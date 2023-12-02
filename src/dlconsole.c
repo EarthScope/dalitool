@@ -193,7 +193,7 @@ runconsole (DLCP *dlconn, DLPacket *dlpacket, void *packetdata,
         }
       }
 
-      pktid = dl_position (dlconn, pktid, HPTERROR);
+      pktid = dl_position (dlconn, pktid, DLTERROR);
 
       if (pktid > 0)
       {

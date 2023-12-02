@@ -16,7 +16,7 @@
 #include "common.h"
 #include "dalixml.h"
 
-static void msr_print_samples (MSRecord *msr, int psamples);
+static void msr_print_samples (MS3Record *msr, int psamples);
 
 /***************************************************************************
  * packet_handler:
@@ -64,9 +64,9 @@ packet_handler (DLPacket *dlpacket, void *packetdata,
     /* Handle MSEED packet types */
     if (!strncmp (type, "MSEED", sizeof (type)))
     {
-      MSRecord *msr = 0;
+      MS3Record *msr = 0;
 
-      rv = msr_unpack (packetdata, dlpacket->datasize, &msr, psamples, 0);
+      rv = msr3_parse (packetdata, dlpacket->datasize, &msr, MSF_UNPACKDATA, psamples);
 
       if (rv != MS_NOERROR)
       {
@@ -75,13 +75,13 @@ packet_handler (DLPacket *dlpacket, void *packetdata,
       else
       {
         /* Print more packet details */
-        msr_print (msr, ppackets - 1);
+        msr3_print (msr, ppackets - 1);
 
         if (psamples)
           msr_print_samples (msr, psamples);
       }
 
-      msr_free (&msr);
+      msr3_free (&msr);
     }
     /* This would be the place to add support for other packet types */
     /* Otherwise this is an unrecognized packet type */
@@ -150,7 +150,7 @@ info_handler (char *infotype, char *infodata, int infolen, int formatlevel)
  * Print samples in the MSRecord with a simple format.
  ***************************************************************************/
 static void
-msr_print_samples (MSRecord *msr, int psamples)
+msr_print_samples (MS3Record *msr, int psamples)
 {
   int line, col, cnt, samplesize;
   int lines = (msr->numsamples / 6) + 1;

@@ -3,7 +3,7 @@
  * A DataLink client for data stream inspection and server information.
  *
  * Written by Chad Trabant
- *   IRIS Data Management Center
+ *   EarthScope Data Services
  ***************************************************************************/
 
 #include <errno.h>
