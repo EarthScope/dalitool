@@ -4,7 +4,7 @@
  * Routines to print formatted INFO XML responses.
  *
  * Written by:
- *   Chad Trabant, IRIS Data Management Center
+ *   Chad Trabant, EarthScope Data Services
  ***************************************************************************/
 
 #include <stdio.h>

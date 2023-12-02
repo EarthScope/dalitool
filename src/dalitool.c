@@ -46,7 +46,7 @@ static DLCP *dlconn; /* connection parameters */
 /* Functions internal to this source file */
 static int parameter_proc (int argcount, char **argvec);
 static char *getoptval (int argcount, char **argvec, int argopt);
-static void print_stderr (char *message);
+static void print_stderr (const char *message);
 static void usage (void);
 
 #ifndef WIN32
@@ -406,7 +406,7 @@ parameter_proc (int argcount, char **argvec)
 /***************************************************************************
  * getoptval:
  *
- * Return the value to a command line option; checking that the value is 
+ * Return the value to a command line option; checking that the value is
  * itself not an option (starting with '-') and is not past the end of
  * the argument list.
  *
@@ -445,7 +445,7 @@ getoptval (int argcount, char **argvec, int argopt)
  * Print the given message to standard error.
  ***************************************************************************/
 static void
-print_stderr (char *message)
+print_stderr (const char *message)
 {
   fprintf (stderr, "%s", message);
   return;

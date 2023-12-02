@@ -5,7 +5,7 @@
  *
  * This file is part of the DataLink Library.
  *
- * Copyright (c) 2020 Chad Trabant, IRIS Data Management Center
+ * Copyright (c) 2023 Chad Trabant, EarthScope Data Services
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,8 +55,8 @@ dl_connect (DLCP *dlconn)
   struct addrinfo hints;
   SOCKET sock;
   long int nport;
-  char nodename[300];
-  char nodeport[100];
+  char nodename[300] = {0};
+  char nodeport[100] = {0};
   char *ptr, *tail;
   int timeout;
   int socket_family = -1;
@@ -86,7 +86,7 @@ dl_connect (DLCP *dlconn)
     else /* Only a port */
     {
       strcpy (nodename, LD_DEFAULT_HOST);
-      strncpy (nodeport, dlconn->addr + 1, sizeof (nodeport));
+      strncpy (nodeport, dlconn->addr + 1, sizeof (nodeport) - 1);
     }
   }
   /* Otherwise if no separator, use default port */
